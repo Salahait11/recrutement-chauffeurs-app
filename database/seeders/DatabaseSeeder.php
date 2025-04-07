@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             EvaluationCriteriaSeeder::class, // Garde les autres seeders utiles
             VehicleSeeder::class,
             LeaveTypeSeeder::class,
+            
         ]);
     }
 }

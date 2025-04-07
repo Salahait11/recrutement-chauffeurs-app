@@ -9,20 +9,48 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\DB; // Pour la transaction dans update
 use Illuminate\Support\Facades\Hash; // Si on gérait le mot de passe ici
 use Illuminate\Validation\Rule; // Pour les règles unique complexes
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+
 
 class EmployeeController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request) // <<< AJOUTER Request $request
     {
-        // Récupère les employés avec leur information User associée
-        $employees = Employee::with('user')
-                             ->orderBy('hire_date', 'desc') // Trier par date d'embauche
-                             ->paginate(20);
+        $search = $request->query('search'); // Récupère le terme de recherche
 
-        return view('employees.index', compact('employees'));
+        // Requête de base avec la relation 'user' chargée
+        $query = Employee::with('user');
+
+        // Appliquer le filtre si recherche
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                // Recherche dans la table 'employees'
+                $q->where('employee_number', 'LIKE', "%{$search}%")
+                  // Recherche dans la table 'users' liée (via une sous-requête 'whereHas')
+                  ->orWhereHas('user', function ($userQuery) use ($search) {
+                      $userQuery->where('name', 'LIKE', "%{$search}%")
+                                ->orWhere('email', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        // Trier et paginer
+        // Trier par date d'embauche ou par nom d'utilisateur ?
+        $employees = $query->orderBy('hire_date', 'desc')->paginate(20);
+        // Ou par nom: $employees = $query->join('users', 'employees.user_id', '=', 'users.id')->orderBy('users.name', 'asc')->select('employees.*')->paginate(20); -> Plus complexe
+
+        // Ajouter la recherche aux liens de pagination
+        $employees->appends($request->only(['search']));
+
+        // Passer employés et terme de recherche à la vue (chemin admin ou non ?)
+        // Si tes vues sont dans /admin/employees :
+        // return view('admin.employees.index', compact('employees', 'search'));
+        // Si tes vues sont dans /employees :
+        return view('employees.index', compact('employees', 'search'));
     }
 
     /**
@@ -31,21 +59,82 @@ class EmployeeController extends Controller
      * Cette méthode pourrait être désactivée ou adaptée pour une création manuelle.
      */
     public function create()
-    {
-        // Exemple si on voulait une création manuelle :
-        // $usersWithoutEmployeeProfile = User::whereDoesntHave('employee')->get();
-        // return view('employees.create', compact('usersWithoutEmployeeProfile'));
-        abort(403, 'La création d\'employé se fait via l\'acceptation d\'une offre candidat.');
-    }
+{
+    // Récupérer les utilisateurs pour la liste des managers potentiels
+    $managers = User::orderBy('name')->get(['id', 'name']);
+    // On pourrait aussi passer une liste de postes prédéfinis, départements...
+
+    // La vue sera dans admin/employees si on garde cette structure, sinon employees/create
+    return view('employees.create', compact('managers')); // Vue à créer
+}
 
     /**
      * Store a newly created resource in storage.
      * (Pas utilisé si la création se fait via OfferController@update)
      */
     public function store(Request $request)
-    {
-        abort(403, 'Méthode non applicable pour la création d\'employé.');
+{
+    // 1. Valider les données de l'employé ET de l'utilisateur à créer
+    $validatedData = $request->validate([
+        // Données User
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email', // Email doit être unique
+        // Données Employee
+        'employee_number' => 'nullable|string|max:255|unique:employees,employee_number',
+        'hire_date' => 'required|date',
+        'job_title' => 'nullable|string|max:255',
+        'department' => 'nullable|string|max:255',
+        'manager_id' => 'nullable|exists:users,id',
+        'work_location' => 'nullable|string|max:255',
+        'social_security_number' => 'nullable|string|max:50|unique:employees,social_security_number',
+        'bank_details' => 'nullable|string',
+        // Statut initial? Généralement 'active'
+        'status' => 'required|in:active,on_leave,terminated', // Permettre de choisir ? Ou forcer 'active' ?
+        'termination_date' => 'nullable|required_if:status,terminated|date|after_or_equal:hire_date',
+    ]);
+
+    // Gérer le mot de passe : Puisque l'employé ne se connecte pas,
+    // on peut mettre une valeur aléatoire non utilisable.
+    $randomPassword = Hash::make(Str::random(16)); // Mot de passe haché aléatoire
+
+    // Utiliser une transaction pour créer User et Employee ensemble
+    DB::beginTransaction();
+    try {
+        // 2. Créer l'Utilisateur
+        $user = User::create([
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'password' => $randomPassword,
+            'email_verified_at' => now(), // Marquer comme vérifié
+            'role' => 'employee', // Rôle par défaut pour création manuelle
+        ]);
+
+        // 3. Créer l'Employé lié à cet utilisateur
+        $employee = Employee::create([
+            'user_id' => $user->id,
+            'candidate_id' => null, // Pas de candidat d'origine ici
+            'employee_number' => $validatedData['employee_number'] ?? null,
+            'hire_date' => $validatedData['hire_date'],
+            'job_title' => $validatedData['job_title'] ?? null,
+            'department' => $validatedData['department'] ?? null,
+            'manager_id' => $validatedData['manager_id'] ?? null,
+            'work_location' => $validatedData['work_location'] ?? null,
+            'social_security_number' => $validatedData['social_security_number'] ?? null,
+            'bank_details' => $validatedData['bank_details'] ?? null,
+            'status' => $validatedData['status'] ?? 'active',
+            'termination_date' => ($validatedData['status'] === 'terminated') ? $validatedData['termination_date'] : null,
+        ]);
+
+        DB::commit(); // Tout s'est bien passé
+
+        return Redirect::route('employees.index')->with('success', 'Employé créé avec succès.');
+
+    } catch (\Exception $e) {
+        DB::rollBack(); // Annuler en cas d'erreur
+        Log::error("Erreur création manuelle employé: " . $e->getMessage());
+        return Redirect::back()->withInput()->with('error', 'Erreur lors de la création de l\'employé.');
     }
+}
 
     /**
      * Display the specified resource.
@@ -145,7 +234,7 @@ class EmployeeController extends Controller
 
         } catch (\Exception $e) {
              DB::rollBack(); // Annuler en cas d'erreur
-             \Log::error("Erreur MAJ employé ID {$employee->id}: " . $e->getMessage());
+             Log::error("Erreur MAJ employé ID {$employee->id}: " . $e->getMessage());
              return Redirect::back()->withInput()->with('error', 'Erreur lors de la mise à jour des informations.');
         }
     }

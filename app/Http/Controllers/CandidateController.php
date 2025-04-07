@@ -4,18 +4,41 @@ namespace App\Http\Controllers;
 use App\Models\Candidate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Log;
 class CandidateController extends Controller
+
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $candidates = Candidate::all();
+    public function index(Request $request)
+{
+    $search = $request->query('search');
+    Log::debug("Recherche Candidat - Terme: " . ($search ?? 'aucun')); // Log le terme
 
-        // Passe les candidats à une vue (qui sera créée plus tard)
-        return view('candidates.index', compact('candidates'));
+    $query = Candidate::query();
+
+    if ($search) {
+        Log::debug("Recherche Candidat - Application du filtre WHERE.");
+        $query->where(function ($q) use ($search) {
+            $q->where('first_name', 'LIKE', "%{$search}%")
+              ->orWhere('last_name', 'LIKE', "%{$search}%")
+              ->orWhere('email', 'LIKE', "%{$search}%");
+        });
+    } else {
+         Log::debug("Recherche Candidat - Pas de filtre appliqué.");
     }
+
+    // Pour voir la requête SQL générée (utile pour le debug)
+    // Log::debug("Recherche Candidat - SQL: " . $query->toSql()); // Attention: ne montre pas les bindings %search%
+
+    $candidates = $query->orderBy('created_at', 'desc')->paginate(15);
+    Log::debug("Recherche Candidat - Nombre de résultats trouvés: " . $candidates->total()); // Log le nombre de résultats
+
+    $candidates->appends($request->only(['search']));
+
+    return view('candidates.index', compact('candidates', 'search'));
+}
 
     /**
      * Show the form for creating a new resource.

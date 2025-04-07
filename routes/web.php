@@ -14,7 +14,9 @@ use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardController; // Ajoute cette ligne
 use App\Http\Controllers\AbsenceController;
-use App\Http\Controllers\ReportController; 
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\EvaluationCriterionController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -73,6 +75,9 @@ Route::middleware('auth')->group(function () {
 
       Route::resource('absences', AbsenceController::class);
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index'); 
+     Route::resource('vehicles', VehicleController::class);
+      Route::resource('evaluation-criteria', EvaluationCriterionController::class)
+          ->parameters(['evaluation-criteria' => 'criterion']); // Renomme paramètre
     });
 
 

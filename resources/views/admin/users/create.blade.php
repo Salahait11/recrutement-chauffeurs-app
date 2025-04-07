@@ -8,7 +8,23 @@
         <form method="POST" action="{{ route('admin.users.store') }}">@csrf<div class="space-y-6">
         <div><label for="name" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Nom Complet') }} <span class="text-red-500">*</span></label><input type="text" name="name" id="name" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" value="{{ old('name') }}" required autofocus>@error('name')<p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>@enderror</div>
         <div><label for="email" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Email (Login)') }} <span class="text-red-500">*</span></label><input type="email" name="email" id="email" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" value="{{ old('email') }}" required>@error('email')<p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>@enderror</div>
-        <div><label for="role" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Rôle') }} <span class="text-red-500">*</span></label><select name="role" id="role" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" required>@foreach($roles as $roleOption)<option value="{{ $roleOption }}" {{ old('role') == $roleOption ? 'selected' : '' }}>{{ ucfirst($roleOption) }}</option>@endforeach</select>@error('role')<p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>@enderror</div>
+<div>
+    <label for="role" class="block font-medium text-sm text-gray-700 dark:text-gray-300">
+        {{ __('Rôle') }} <span class="text-red-500">*</span>
+    </label>
+    
+    <select name="role_disabled" id="role" disabled
+        class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600">
+        <option value="admin" selected>Admin</option>
+    </select>
+    
+    <!-- Champ caché pour envoyer la valeur -->
+    <input type="hidden" name="role" value="admin">
+
+    @error('role')
+        <p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
+    @enderror
+</div>
         <hr class="dark:border-gray-700 my-2"><h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Mot de Passe Initial</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div><label for="password" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Mot de Passe') }} <span class="text-red-500">*</span></label><input type="password" name="password" id="password" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" required autocomplete="new-password">@error('password')<p class="text-sm text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>@enderror</div>
         <div><label for="password_confirmation" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Confirmer Mot de Passe') }} <span class="text-red-500">*</span></label><input type="password" name="password_confirmation" id="password_confirmation" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" required autocomplete="new-password"></div>

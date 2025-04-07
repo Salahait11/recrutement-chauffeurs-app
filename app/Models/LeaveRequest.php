@@ -14,10 +14,10 @@ class LeaveRequest extends Model {
         'end_date',
         'duration_days',
         'reason',
-        'status',
-        'approver_id',
-        'approved_at',
-        'approver_comment',
+         'status', // <<< VÉRIFIE PRÉSENCE
+        'approver_id', // <<< VÉRIFIE PRÉSENCE
+        'approved_at', // <<< VÉRIFIE PRÉSENCE
+        'approver_comment', // <<< VÉRIFIE PRÉSENCE
         'attachment_path',
     ];
 

@@ -42,6 +42,12 @@
                     <x-nav-link :href="route('admin.reports.index')" :active="request()->routeIs('admin.reports.*')">
                         {{ __('Rapports') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('admin.vehicles.index')" :active="request()->routeIs('admin.vehicles.*')">
+                        {{ __('Véhicules') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('admin.evaluation-criteria.index')" :active="request()->routeIs('admin.evaluation-criteria.*')">
+                        {{ __('Critères Évaluation') }}
+                    </x-nav-link>
                 </div>
             </div>
 

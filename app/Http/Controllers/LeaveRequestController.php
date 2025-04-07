@@ -7,7 +7,7 @@ use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use App\Models\Employee;
 use App\Models\User;
-use App\Models\Absence; 
+use App\Models\Absence;
 
 // Laravel Facades & Classes
 use Illuminate\Http\Request;
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB; // Pour transactions
+use Illuminate\Support\Facades\DB; // Gardé pour transactions approve/reject
 use Illuminate\Validation\Rules\File;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
@@ -24,47 +24,33 @@ class LeaveRequestController extends Controller
 {
     /**
      * Display a listing of the resource.
-     * Adapte l'affichage selon le rôle.
      */
-    public function index(Request $request) // Ajout Request pour filtre éventuel
+    public function index(Request $request)
     {
         $user = Auth::user()->loadMissing('employee');
         $query = LeaveRequest::with(['employee.user', 'leaveType', 'approver'])
                              ->orderBy('start_date', 'desc');
 
         // !! Logique de rôle simplifiée - À adapter !!
-        $isAdminOrManager = $user->isAdmin(); // || $user->hasRole('rh_manager') || $user->isManager();
+        $isAdminOrManager = $user->isAdmin(); // || ...
 
         if (!$isAdminOrManager) {
-           if($user->employee) {
-               $query->where('employee_id', $user->employee->id);
-           } else {
-               $query->whereRaw('1 = 0'); // Ne rien montrer
-           }
+           if($user->employee) { $query->where('employee_id', $user->employee->id); }
+           else { $query->whereRaw('1 = 0'); }
         }
 
-        // Appliquer filtre si présent (pourrait être utilisé par l'admin)
-        if ($employee_id = $request->query('employee_id')) {
-             $query->where('employee_id', $employee_id);
-        }
-        if ($status = $request->query('status')) {
-            if (in_array($status, ['pending', 'approved', 'rejected', 'canceled'])) {
-                 $query->where('status', $status);
-            }
-        }
+        // Filtres
+        if ($employee_id = $request->query('employee_id')) { $query->where('employee_id', $employee_id); }
+        if ($status = $request->query('status')) { if (in_array($status, ['pending', 'approved', 'rejected', 'canceled'])) { $query->where('status', $status); } }
 
-        $leaveRequests = $query->paginate(20)->withQueryString(); // Garde les paramètres de filtre dans la pagination
-
-        // Récupérer employés pour le filtre dans la vue index aussi
+        $leaveRequests = $query->paginate(20)->withQueryString();
         $employees = $isAdminOrManager ? Employee::with('user')->where('status', 'active')->get()->sortBy('user.name') : collect();
 
-
-        return view('leave_requests.index', compact('leaveRequests', 'employees')); // Passe aussi $employees
+        return view('leave_requests.index', compact('leaveRequests', 'employees'));
     }
 
     /**
      * Show the form for creating a new resource.
-     * Permet à l'admin/manager de choisir l'employé.
      */
     public function create()
     {
@@ -75,19 +61,17 @@ class LeaveRequestController extends Controller
         $employee = null;
 
         if ($isAdminOrManager) {
-            $employees = Employee::with('user')
-                                 ->whereHas('user')
-                                 ->where('status', 'active')
-                                 ->get()
-                                 ->sortBy('user.name');
+            $employees = Employee::with('user')->whereHas('user')->where('status', 'active')->get()->sortBy('user.name');
         } elseif ($user->employee) {
-            $employee = $user->employee;
+            // Récupère l'objet Employee directement
+            $employee = Employee::find($user->employee->id);
         } else {
              return Redirect::route('dashboard')->with('error', 'Action non autorisée.');
         }
 
         $leaveTypes = LeaveType::where('is_active', true)->orderBy('name')->get();
 
+        // On ne passe plus $balances
         return view('leave_requests.create', compact('employee', 'employees', 'leaveTypes'));
     }
 
@@ -105,33 +89,36 @@ class LeaveRequestController extends Controller
             'attachment' => ['nullable', File::types(['pdf', 'jpg', 'png', 'jpeg'])->max(2 * 1024) ],
         ], [ /* ... messages ... */ ]);
 
-        // Calcul durée (simple) - à affiner si besoin
-        try {
+         // Calcul durée (simple)
+         try {
            $start = Carbon::parse($validatedData['start_date']);
            $end = Carbon::parse($validatedData['end_date']);
            $validatedData['duration_days'] = $start->diffInDays($end) + 1;
-        } catch (\Exception $e) { return Redirect::back()->withInput()->with('error', 'Format date invalide.'); }
+         } catch (\Exception $e) { return Redirect::back()->withInput()->with('error', 'Format date invalide.'); }
 
-        // Gérer l'upload
-        $filePath = null;
-        if ($request->hasFile('attachment')) {
-            try {
-               $file = $request->file('attachment');
-               $filePath = $file->store('leave_attachments/' . $validatedData['employee_id'], 'public');
-               $validatedData['attachment_path'] = $filePath;
-            } catch (\Exception $e) { Log::error(...); return Redirect::back()->withInput()->with('error', 'Erreur stockage justificatif.'); }
+         // Gérer l'upload
+         $filePath = null;
+         if ($request->hasFile('attachment')) {
+             try {
+                $file = $request->file('attachment');
+                $filePath = $file->store('leave_attachments/' . $validatedData['employee_id'], 'public');
+                $validatedData['attachment_path'] = $filePath;
+             } catch (\Exception $e) { Log::error("Erreur stockage justificatif congé: ".$e->getMessage()); return Redirect::back()->withInput()->with('error', 'Erreur stockage justificatif.'); }
+         }
+
+         $validatedData['status'] = 'pending';
+
+         // Pas de vérification de solde ici
+
+         try {
+            LeaveRequest::create($validatedData);
+         } catch (\Exception $e) {
+             if ($filePath) Storage::disk('public')->delete($filePath);
+             Log::error("Erreur création demande congé: " . $e->getMessage());
+             return Redirect::back()->withInput()->with('error', 'Erreur soumission demande.');
         }
 
-        $validatedData['status'] = 'pending'; // Statut initial
-
-        try {
-           LeaveRequest::create($validatedData);
-        } catch (\Exception $e) {
-            if ($filePath) Storage::disk('public')->delete($filePath);
-            Log::error(...); return Redirect::back()->withInput()->with('error', 'Erreur soumission demande.');
-        }
-
-        // Notification ?
+        // Pas de notification ici (retirée)
 
         return Redirect::route('leave-requests.index')->with('success', 'Demande de congé soumise.');
     }
@@ -141,9 +128,7 @@ class LeaveRequestController extends Controller
      */
     public function show(LeaveRequest $leaveRequest)
     {
-        // !! Logique d'autorisation !!
-        // $this->authorize('view', $leaveRequest);
-
+        // $this->authorize('view', $leaveRequest); // TODO
         $leaveRequest->load(['employee.user', 'leaveType', 'approver']);
         return view('leave_requests.show', compact('leaveRequest'));
     }
@@ -153,72 +138,80 @@ class LeaveRequestController extends Controller
      */
     public function edit(LeaveRequest $leaveRequest)
     {
-        // !! Logique d'autorisation !!
-        // $this->authorize('update', $leaveRequest);
+        // $this->authorize('update', $leaveRequest); // TODO
+        if ($leaveRequest->status !== 'pending') { return Redirect::route('leave-requests.show', $leaveRequest->id)->with('error', 'Non modifiable.'); }
 
-        if ($leaveRequest->status !== 'pending') {
-            return Redirect::route('leave-requests.show', $leaveRequest->id)->with('error', 'Demande non modifiable.');
-        }
         $leaveTypes = LeaveType::where('is_active', true)->orderBy('name')->get();
-        $employee = $leaveRequest->employee; // Récupérer l'employé concerné
-        // Récupérer la liste des employés si c'est un admin qui modifie ? Moins courant.
+        $employee = $leaveRequest->employee;
         $employees = null;
-        if (Auth::user()->isAdmin()) {
-             $employees = Employee::with('user')->where('status', 'active')->get()->sortBy('user.name');
-        }
+        // if (Auth::user()->isAdmin()) { $employees = ...; }
 
-        return view('leave_requests.edit', compact('leaveRequest', 'leaveTypes', 'employee', 'employees'));
+        return view('leave_requests.edit', compact('leaveRequest', 'leaveTypes', 'employee', 'employees')); // Vue edit à créer/adapter
     }
 
     /**
-     * Update the specified resource in storage.
-     * Gère approbation/rejet OU modification par employé (si statut pending).
+     * Update the specified resource in storage. (Approbation/Rejet)
      */
     public function update(Request $request, LeaveRequest $leaveRequest)
     {
-        // Scénario 1: Approbation/Rejet par admin/manager
+        // $this->authorize('approveReject', $leaveRequest); // TODO
+
         if ($request->has('action') && $leaveRequest->status === 'pending') {
-            // !! Autorisation spécifique pour approuver/rejeter !!
-            // $this->authorize('approveReject', $leaveRequest);
             $action = $request->input('action');
+
             if ($action === 'approve') {
-                DB::beginTransaction(); try { /* ... logique approbation ... */ DB::commit(); return Redirect::route('leave-requests.show', $leaveRequest->id)->with('success', 'Demande approuvée.'); } catch (\Exception $e) { DB::rollBack(); Log::error(...); return Redirect::route('leave-requests.show', $leaveRequest->id)->with('error', 'Erreur approbation.'); }
-            } elseif ($action === 'reject') {
-                 $request->validate(['approver_comment' => 'required|string|max:500'], ['approver_comment.required' => 'Commentaire requis pour rejet.']);
-                 DB::beginTransaction(); try { /* ... logique rejet ... */ DB::commit(); return Redirect::route('leave-requests.show', $leaveRequest->id)->with('success', 'Demande rejetée.'); } catch (\Exception $e) { DB::rollBack(); Log::error(...); return Redirect::route('leave-requests.show', $leaveRequest->id)->with('error', 'Erreur rejet.'); }
-            }
-        }
-        // Scénario 2: Modification par l'employé (ou admin) si statut pending
-        elseif ($leaveRequest->status === 'pending') {
-             // !! Autorisation pour modifier sa propre demande en attente !!
-             // $this->authorize('updateOwnPending', $leaveRequest);
+                DB::beginTransaction(); try {
+                    // Pas de déduction de solde ici
+                    $leaveRequest->update([
+                        'status' => 'approved', 'approver_id' => Auth::id(),
+                        'approved_at' => now(), 'approver_comment' => $request->input('approver_comment')
+                    ]);
+                    DB::commit(); return Redirect::route('leave-requests.show', $leaveRequest->id)->with('success', 'Demande approuvée.');
+                } catch (\Exception $e) { DB::rollBack(); Log::error(...); return Redirect::route('leave-requests.show', $leaveRequest->id)->with('error', 'Erreur approbation.'); }
 
-             $validatedData = $request->validate([ /* ... règles similaires à store MAIS sans employee_id ? ... */ ]);
-             // Gérer le fichier joint si modifié...
-             // $leaveRequest->update($validatedData);
-             return Redirect::route('leave-requests.show', $leaveRequest->id)->with('success', 'Demande mise à jour (Logique à finaliser).');
+            } elseif ($action === 'reject' && $leaveRequest->status === 'pending') {
+     $request->validate(
+        ['approver_comment' => 'required|string|max:500'],
+        ['approver_comment.required' => 'Un commentaire est requis pour rejeter la demande.']
+     );
+     DB::beginTransaction();
+     try {
+         // Utilise update() pour la mise à jour
+         $leaveRequest->update([
+            'status' => 'rejected',
+            'approver_id' => Auth::id(),
+            'approved_at' => now(), // Date du rejet
+            'approver_comment' => $request->input('approver_comment') // Prend la valeur validée
+        ]);
+        DB::commit();
+        return Redirect::route('leave-requests.show', $leaveRequest->id)->with('success', 'Demande rejetée.');
+     } catch (\Exception $e) {
+         DB::rollBack();
+         Log::error("Erreur rejet congé ID {$leaveRequest->id}: " . $e->getMessage());
+         return Redirect::route('leave-requests.show', $leaveRequest->id)->with('error', 'Erreur technique lors du rejet.');
+     }
+}
         }
 
-        // Si aucune action ou statut non modifiable
         return Redirect::route('leave-requests.show', $leaveRequest->id)->with('error', 'Action non valide ou demande déjà traitée.');
     }
 
 
     /**
-     * Remove the specified resource from storage. (Utilisé pour Annuler par l'employé/admin)
+     * Remove the specified resource from storage. (Annulation)
      */
     public function destroy(LeaveRequest $leaveRequest)
     {
-         // !! Logique d'autorisation !!
-         // $this->authorize('cancel', $leaveRequest);
+         // $this->authorize('cancel', $leaveRequest); // TODO
 
          if ($leaveRequest->status === 'pending') {
-             try {
+             DB::beginTransaction(); try {
                  $leaveRequest->status = 'canceled';
-                 $leaveRequest->save();
-                 // Renvoyer crédit ? (non implémenté)
+                 $leaveRequest->save(); // Utiliser save() ici car on ne change qu'un champ
+                 // Pas de logique de solde à restituer
+                 DB::commit();
                  return Redirect::route('leave-requests.index')->with('success', 'Demande annulée.');
-             } catch (\Exception $e) { Log::error(...); return Redirect::route('leave-requests.index')->with('error', 'Erreur annulation.'); }
+             } catch (\Exception $e) { DB::rollBack(); Log::error(...); return Redirect::route('leave-requests.index')->with('error', 'Erreur annulation.'); }
          } else {
               return Redirect::route('leave-requests.index')->with('error', 'Seules les demandes en attente peuvent être annulées.');
          }
@@ -229,51 +222,132 @@ class LeaveRequestController extends Controller
      */
     public function getLeaveEvents(Request $request): JsonResponse
     {
-        $request->validate([
-            'start' => 'sometimes|date',
-            'end' => 'sometimes|date|after_or_equal:start',
-            'employee_id' => 'sometimes|integer|exists:employees,id' // Valide filtre optionnel
-        ]);
-        $start = $request->query('start', Carbon::now()->subYear()->toDateString());
-        $end = $request->query('end', Carbon::now()->addYear()->toDateString());
+        Log::debug('getLeaveEvents: Début de la requête.', $request->query());
 
-        // Requête Congés
-        $queryLeave = LeaveRequest::with(['employee.user', 'leaveType'])
-                                 ->where('status', 'approved')
-                                 ->where(function($q) use ($start, $end) { $q->where('start_date', '<=', $end)->where('end_date', '>=', $start); });
+        try {
+            $request->validate([
+                'start' => 'sometimes|date',
+                'end' => 'sometimes|date|after_or_equal:start',
+                'employee_id' => 'sometimes|integer|exists:employees,id'
+            ]);
 
-        // Requête Absences
-        $queryAbsence = Absence::with(['employee.user']) // Charger relations absence
-                             ->where('absence_date', '>=', $start)
-                             ->where('absence_date', '<=', $end);
+            $start = $request->query('start', Carbon::now()->subYear()->toDateString());
+            $end = $request->query('end', Carbon::now()->addYear()->toDateString());
+            Log::debug("getLeaveEvents: Période demandée: $start -> $end");
 
-        // Appliquer le filtre employé si présent
-        if ($request->filled('employee_id')) {
-             $employeeId = $request->input('employee_id');
-             // !! Ajouter vérification permission de voir cet employé si l'utilisateur n'est pas admin !!
-             $queryLeave->where('employee_id', $employeeId);
-             $queryAbsence->where('employee_id', $employeeId);
+            // --- Récupérer les Demandes de Congé Approuvées ---
+            $queryLeave = LeaveRequest::with(['employee.user', 'leaveType']) // Eager load relations
+                                     ->where('status', 'approved')
+                                     ->where(function($q) use ($start, $end) {
+                                         $q->where('start_date', '<=', $end)
+                                           ->where('end_date', '>=', $start);
+                                     });
+
+            // --- Récupérer les Absences ---
+            $queryAbsence = Absence::with(['employee.user']) // Eager load relations
+                                 ->where('absence_date', '>=', $start)
+                                 ->where('absence_date', '<=', $end);
+
+            // --- Appliquer le filtre Employé ---
+            if ($request->filled('employee_id')) {
+                 $employeeId = $request->input('employee_id');
+                 Log::debug("getLeaveEvents: Filtrage pour employee_id: $employeeId");
+                 // !! Ajouter vérification permission !!
+                 $queryLeave->where('employee_id', $employeeId);
+                 $queryAbsence->where('employee_id', $employeeId);
+            } else {
+                 Log::debug("getLeaveEvents: Pas de filtre employé appliqué.");
+            }
+
+            $leaveRequests = $queryLeave->get();
+            $absences = $queryAbsence->get();
+            Log::debug("getLeaveEvents: Congés trouvés: " . $leaveRequests->count());
+            Log::debug("getLeaveEvents: Absences trouvées: " . $absences->count());
+
+            // --- Formater les Congés ---
+            $leaveEvents = $leaveRequests->map(function ($leave) {
+                // Vérification détaillée des relations
+                $employeeExists = $leave->employee;
+                $userExists = $employeeExists && $leave->employee->user;
+                $leaveTypeExists = $leave->leaveType;
+
+                if (!$employeeExists || !$userExists || !$leaveTypeExists) {
+                    $missing = [];
+                    if (!$employeeExists) $missing[] = 'employee';
+                    if (!$userExists) $missing[] = 'employee->user';
+                    if (!$leaveTypeExists) $missing[] = 'leaveType';
+                    Log::warning("getLeaveEvents: Données incomplètes pour LeaveRequest ID {$leave->id}. Manquant: " . implode(', ', $missing));
+                    return null; // Sera filtré par ->filter()
+                }
+
+                // Formatage si tout est ok
+                $employeeName = $leave->employee->user->name;
+                $leaveTypeName = $leave->leaveType->name;
+                $color = $leave->leaveType->color_code ?? '#3788d8';
+                $endDate = Carbon::parse($leave->end_date)->addDay()->toDateString();
+
+                return [
+                    'id' => 'leave_'.$leave->id,
+                    'title' => $employeeName . ' - ' . $leaveTypeName,
+                    'start' => $leave->start_date->format('Y-m-d'),
+                    'end' => $endDate,
+                    'backgroundColor' => $color,
+                    'borderColor' => $color,
+                    'url' => route('leave-requests.show', $leave->id), // Lien vers la demande
+                    'extendedProps' => ['type' => 'leave_request']
+                ];
+            })->filter(); // Enlève les éléments null
+
+            // --- Formater les Absences ---
+             $absenceEvents = $absences->map(function ($absence) {
+                 // Vérification détaillée des relations
+                 $employeeExists = $absence->employee;
+                 $userExists = $employeeExists && $absence->employee->user;
+                 // Pas de leaveType ici
+
+                 if (!$employeeExists || !$userExists) {
+                     $missing = [];
+                     if (!$employeeExists) $missing[] = 'employee';
+                     if (!$userExists) $missing[] = 'employee->user';
+                     Log::warning("getLeaveEvents: Données incomplètes pour Absence ID {$absence->id}. Manquant: " . implode(', ', $missing));
+                     return null; // Sera filtré
+                 }
+
+                 // Formatage si tout est ok
+                 $employeeName = $absence->employee->user->name;
+                 $color = $absence->is_justified ? '#fdba74' : '#f87171'; // orange-300 / red-400
+                 $startDate = $absence->absence_date->format('Y-m-d');
+                 $endDate = $absence->absence_date->addDay()->format('Y-m-d');
+
+                 return [
+                     'id' => 'absence_'.$absence->id,
+                     'title' => $employeeName . ' - Absence (' . ($absence->reason_type ?? 'N/C') .')',
+                     'start' => $startDate,
+                     'end' => $endDate,
+                     'backgroundColor' => $color,
+                     'borderColor' => $color,
+                     'url' => route('admin.absences.edit', $absence->id), // Lien vers modification absence
+                     'extendedProps' => ['type' => 'absence', 'justified' => $absence->is_justified]
+                 ];
+             })->filter(); // Enlève les éléments null
+
+            // --- Fusionner et Renvoyer ---
+            $allEvents = $leaveEvents->merge($absenceEvents);
+            Log::debug("getLeaveEvents: Total événements formatés: " . $allEvents->count());
+
+            return response()->json($allEvents);
+
+        } catch (\Exception $e) {
+            Log::error("Erreur dans getLeaveEvents: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            // Renvoyer une réponse JSON vide avec un code d'erreur serveur
+            return response()->json(['error' => 'Erreur serveur lors de la récupération des événements.'], 500);
         }
-
-        $leaveRequests = $queryLeave->get();
-        $absences = $queryAbsence->get();
-
-        // Formatage Congés
-        $leaveEvents = $leaveRequests->map(function ($leave) { /* ... comme avant ... */ });
-        // Formatage Absences
-        $absenceEvents = $absences->map(function ($absence) { /* ... comme avant ... */ });
-
-        // Fusion
-        $allEvents = $leaveEvents->merge($absenceEvents);
-        return response()->json($allEvents);
     }
-
      /**
      * Display the leave calendar view.
      */
     public function calendar()
     {
-         // Récupérer les employés pour le filtre du calendrier
          $employees = Employee::with('user')->where('status', 'active')->get()->sortBy('user.name');
          return view('calendar.index', compact('employees'));
     }

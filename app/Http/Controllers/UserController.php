@@ -17,13 +17,19 @@ class UserController extends Controller
     // Le middleware est appliqué par le groupe de routes dans web.php
 
     /** Display a listing of users. */
-    public function index()
-    {
-        $users = User::orderBy('name')->paginate(20);
-        $roles = ['admin', 'recruiter', 'manager', 'employee'];
-        // Utilise la vue dans le sous-dossier 'admin/users'
-        return view('admin.users.index', compact('users', 'roles'));
-    }
+   public function index()
+{
+    // Récupère tous les utilisateurs sauf les admins
+    $users = User::where('role', '=', 'admin')
+                 ->orderBy('name')
+                 ->paginate(20);
+
+    // Tu peux garder ça si tu veux créer un utilisateur avec rôle admin forcé
+    $roles = ['admin'];
+
+    return view('admin.users.index', compact('users', 'roles'));
+}
+
 
     /** Show the form for creating a new user */
     public function create()

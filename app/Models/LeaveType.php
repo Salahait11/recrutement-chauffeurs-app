@@ -12,4 +12,6 @@ class LeaveType extends Model {
 
     // Relation vers les demandes de ce type
     public function leaveRequests(): HasMany { return $this->hasMany(LeaveRequest::class); }
+   
+
 }

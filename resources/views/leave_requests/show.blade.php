@@ -15,8 +15,26 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100 space-y-6">
 
                     {{-- Messages Flash --}}
-                     @if (session('success')) <div class="mb-4 bg-green-100 ...">{{ session('success') }}</div> @endif
-                     @if (session('error')) <div class="mb-4 bg-red-100 ...">{{ session('error') }}</div> @endif
+                     {{-- AJOUTER CE BLOC --}}
+@if ($errors->any())
+    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 dark:bg-red-900 dark:text-red-200 dark:border-red-700 px-4 py-3 rounded relative" role="alert">
+        <strong class="font-bold">Erreur de validation !</strong>
+        {{-- Option 1: Afficher seulement la première erreur --}}
+        {{-- <span class="block sm:inline">{{ $errors->first() }}</span> --}}
+
+        {{-- Option 2: Afficher toutes les erreurs --}}
+        <ul class="mt-2 list-disc list-inside text-sm">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+{{-- Blocs @if (session(...)) existants --}}
+@if (session('success')) <div class="mb-4 bg-green-100 ...">{{ session('success') }}</div> @endif
+@if (session('error')) <div class="mb-4 bg-red-100 ...">{{ session('error') }}</div> @endif
+
 
                     {{-- Détails de la demande --}}
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
