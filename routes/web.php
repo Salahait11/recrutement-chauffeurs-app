@@ -13,6 +13,8 @@ use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardController; // Ajoute cette ligne
+use App\Http\Controllers\AbsenceController;
+use App\Http\Controllers\ReportController; 
 
 Route::get('/', function () {
     return view('welcome');
@@ -69,6 +71,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class)
               ->except(['show']); // On garde create/store, on enlève show qui redirige vers edit
 
+      Route::resource('absences', AbsenceController::class);
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index'); 
     });
 
 
