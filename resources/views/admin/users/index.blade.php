@@ -5,8 +5,8 @@
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 {{ __('Gestion des Utilisateurs') }}
             </h2>
-             {{-- Le bouton "Ajouter" est le formulaire Register standard --}}
-             <a href="{{ route('register') }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+             {{-- Bouton pour créer un nouvel utilisateur --}}
+             <a href="{{ route('admin.users.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
                  {{ __('+ Nouvel Utilisateur') }}
              </a>
         </div>
@@ -58,10 +58,10 @@
                                         <td class="px-6 py-4">{{ $user->created_at->format('d/m/Y') }}</td>
                                         <td class="px-6 py-4">{{ $user->email_verified_at ? $user->email_verified_at->format('d/m/Y H:i') : 'Non' }}</td>
                                         <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
-                                             {{-- Lien vers la page d'édition avec nom préfixé --}}
+                                             {{-- Lien vers la page d'édition standard --}}
                                              <a href="{{ route('admin.users.edit', $user->id) }}" class="font-medium text-indigo-600 dark:text-indigo-500 hover:underline">Modifier</a>
 
-                                             {{-- Bouton Supprimer (avec condition et nom préfixé) --}}
+                                             {{-- Bouton Supprimer standard (avec condition) --}}
                                              @if(Auth::id() !== $user->id)
                                                 <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Supprimer cet utilisateur ? ATTENTION : peut causer des problèmes si lié à des données.');" class="inline">
                                                     @csrf @method('DELETE')

@@ -36,6 +36,9 @@
                     <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
                         {{ __('Utilisateurs') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('calendar.index')" :active="request()->routeIs('calendar.index')">
+                        {{ __('Calendrier') }}
+                    </x-nav-link>
                     
                 </div>
                 

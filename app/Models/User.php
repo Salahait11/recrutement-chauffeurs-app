@@ -84,4 +84,5 @@ public function createdOffers(): HasMany { return $this->hasMany(Offer::class, '
 public function employee(): HasOne { return $this->hasOne(Employee::class); }
 public function managedEmployees(): HasMany { return $this->hasMany(Employee::class, 'manager_id'); }
 public function approvedLeaveRequests(): HasMany { return $this->hasMany(LeaveRequest::class, 'approver_id'); }
+public function recordedAbsences(): HasMany { return $this->hasMany(Absence::class, 'recorded_by_id'); }
 }

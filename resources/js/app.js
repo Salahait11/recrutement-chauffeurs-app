@@ -28,21 +28,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 day: "Jour",
                 list: "Liste",
             },
-            // events: '/api/leave-events' // <<< URL de l'API pour récupérer les événements (À CRÉER)
-            // Optionnel: Rendre les jours cliquables
-            // dateClick: function(info) {
-            //    alert('Date cliquée: ' + info.dateStr);
-            // },
-            // Optionnel: Rendre les événements cliquables
-            // eventClick: function(info) {
-            //    alert('Événement cliqué: ' + info.event.title);
-            //    // info.jsEvent.preventDefault(); // Empêcher la navigation si URL dans l'event
-            //    // Ouvrir les détails de la demande de congé ?
-            //    // window.location.href = '/leave-requests/' + info.event.id;
-            // }
-            // Option pour charger les événements dynamiquement quand on change de mois/vue
+          
             events: {
-                url: "/api/leave-events", // Notre future API endpoint
+                url: "/leave-events", // Notre future API endpoint
                 failure: function () {
                     alert("Erreur lors du chargement des événements!");
                 },

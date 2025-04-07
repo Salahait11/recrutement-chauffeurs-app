@@ -38,4 +38,5 @@ class Employee extends Model {
     public function manager(): BelongsTo { return $this->belongsTo(User::class, 'manager_id'); }
 
    public function leaveRequests(): HasMany { return $this->hasMany(LeaveRequest::class); }
+   public function absences(): HasMany { return $this->hasMany(Absence::class); }
 }

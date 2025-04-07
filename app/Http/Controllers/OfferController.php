@@ -132,16 +132,16 @@ public function update(Request $request, Offer $offer)
                 // On pourrait avoir besoin d'un mot de passe temporaire ou généré.
                 // !! ATTENTION : Gérer la sécurité et la communication du mot de passe !!
                 $tempPassword = \Illuminate\Support\Str::random(10); // Génère un mot de passe aléatoire
-                $user = User::updateOrCreate(
-                    ['email' => $candidate->email], // Recherche par email
-                    [
-                        'name' => $candidate->first_name . ' ' . $candidate->last_name,
-                        'password' => Hash::make($tempPassword), // Hacher le mot de passe
-                        'email_verified_at' => now(), // Marquer comme vérifié
-                        // Attribuer un rôle 'employee' ? (Nécessite gestion des rôles)
-                        // 'role' => 'employee',
-                    ]
-                );
+                 $user = User::updateOrCreate(
+    ['email' => $candidate->email],
+    [
+        'name' => $candidate->first_name . ' ' . $candidate->last_name,
+        'password' => Hash::make($tempPassword),
+        'email_verified_at' => now(), // Garder si ça fonctionne maintenant
+        // 'role' => 'employee', // Optionnel, car c'est la valeur par défaut
+    ]
+);
+
 
                  // S'assurer que le rôle est bien défini si on utilise la gestion des rôles
                  // if ($user->wasRecentlyCreated || !$user->hasRole('employee')) {

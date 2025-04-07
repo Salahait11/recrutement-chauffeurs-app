@@ -52,23 +52,25 @@ Route::middleware('auth')->group(function () {
 
     // Demandes de Congé
     Route::resource('leave-requests', LeaveRequestController::class);
+    Route::get('/calendar', [LeaveRequestController::class, 'calendar'])->name('calendar.index');
+     Route::get('/leave-events', [LeaveRequestController::class, 'getLeaveEvents'])
+          ->name('leave-requests.events');
 
     // --- Paramètres (Accès Restreint) ---
-   Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+
+    // Gestion des Types de Congé
+     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () { // Préfixe URL + Nom
 
         // Gestion des Types de Congé
         Route::resource('leave-types', LeaveTypeController::class)
-              ->parameters(['leave-types' => 'leaveType']);
-              // Les noms seront préfixés par 'admin.', ex: admin.leave-types.index
+              ->parameters(['leave-types' => 'leaveType']); // Le nommage est géré par le groupe
 
         // Gestion des Utilisateurs
         Route::resource('users', UserController::class)
-              ->except(['create', 'store']); // Création via Register
-              // Les noms seront préfixés par 'admin.', ex: admin.users.index
+              ->except(['show']); // On garde create/store, on enlève show qui redirige vers edit
 
-        // ... autres routes admin futures ...
+    });
 
-    });  
 
 }); // Fin groupe auth
 

@@ -11,20 +11,11 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $now = Carbon::now(); // Date actuelle
-
-        User::updateOrCreate(
-    ['email' => 'test@example.com'],
-    [
-        'name' => 'Test User',
-        'password' => Hash::make('password'),
-        'created_at' => now()->format('Y-m-d H:i:s'), // Format explicite
-        'updated_at' => now()->format('Y-m-d H:i:s')
-    ]
-);
+    
 
         $this->call([
-            EvaluationCriteriaSeeder::class,
+             AdminUserSeeder::class, // <<< ASSURE-TOI QUE CET APPEL EST PRESENT
+            EvaluationCriteriaSeeder::class, // Garde les autres seeders utiles
             VehicleSeeder::class,
             LeaveTypeSeeder::class,
         ]);

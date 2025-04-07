@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Crée la table 'users'
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -18,15 +19,20 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
-            $table->timestamps();
+            // == Ligne ajoutée pour le rôle ==
+            $table->string('role')->default('employee')->comment('Rôle: admin, employee, etc.'); // Ajouté après remember_token ou un autre champ pertinent
+            // =================================
+            $table->timestamps(); // Crée created_at et updated_at (TIMESTAMP nullable)
         });
 
+        // Crée la table 'password_reset_tokens'
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
 
+        // Crée la table 'sessions' (si tu utilises la BDD pour les sessions)
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->index();
@@ -45,5 +51,6 @@ return new class extends Migration
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        // Note : Pas besoin de supprimer la colonne 'role' ici car on supprime toute la table 'users'.
     }
 };
