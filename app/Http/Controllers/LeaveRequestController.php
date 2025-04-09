@@ -31,22 +31,63 @@ class LeaveRequestController extends Controller
         $query = LeaveRequest::with(['employee.user', 'leaveType', 'approver'])
                              ->orderBy('start_date', 'desc');
 
-        // !! Logique de rôle simplifiée - À adapter !!
-        $isAdminOrManager = $user->isAdmin(); // || ...
+        // -- Détermination du rôle (simplifié) --
+        $isAdminOrManager = $user->isAdmin();
 
-        if (!$isAdminOrManager) {
-           if($user->employee) { $query->where('employee_id', $user->employee->id); }
-           else { $query->whereRaw('1 = 0'); }
+        // --- Gérer les filtres de la requête ---
+        $employeeFilter = $request->query('employee_id');
+        $statusFilter = $request->query('status');
+        $dateFromFilter = $request->query('date_from'); // Date début période
+        $dateToFilter = $request->query('date_to');   // Date fin période
+
+        // Appliquer filtre Employé (si admin/manager)
+        if ($isAdminOrManager && $employeeFilter) {
+            $query->where('employee_id', $employeeFilter);
+        } elseif (!$isAdminOrManager && $user->employee) {
+            $query->where('employee_id', $user->employee->id);
+        } elseif (!$isAdminOrManager && !$user->employee) {
+            $query->whereRaw('1 = 0');
         }
 
-        // Filtres
-        if ($employee_id = $request->query('employee_id')) { $query->where('employee_id', $employee_id); }
-        if ($status = $request->query('status')) { if (in_array($status, ['pending', 'approved', 'rejected', 'canceled'])) { $query->where('status', $status); } }
+        // Appliquer filtre Statut
+        $allowedStatuses = ['pending', 'approved', 'rejected', 'canceled'];
+        if ($statusFilter && $statusFilter !== 'all' && in_array($statusFilter, $allowedStatuses)) {
+            $query->where('status', $statusFilter);
+        } else {
+            $statusFilter = null;
+        }
 
-        $leaveRequests = $query->paginate(20)->withQueryString();
+        // --- AJOUTER FILTRE PAR DATE ---
+        // Filtre sur la date de *début* du congé tombant dans l'intervalle
+        if ($dateFromFilter) {
+            try {
+                $query->where('start_date', '>=', Carbon::parse($dateFromFilter)->startOfDay());
+            } catch (\Exception $e) {
+                $dateFromFilter = null; // Ignore date invalide
+            }
+        }
+        if ($dateToFilter) {
+            try {
+                // Inclure les congés qui commencent jusqu'à la fin de la journée
+                $query->where('start_date', '<=', Carbon::parse($dateToFilter)->endOfDay());
+            } catch (\Exception $e) {
+                $dateToFilter = null;
+            }
+        }
+        // --- FIN FILTRE PAR DATE ---
+
+        // Exécuter requête et pagination
+        $leaveRequests = $query->paginate(20)->withQueryString(); // Garde TOUS les filtres
+
+        // Récupérer données pour les selects des filtres
         $employees = $isAdminOrManager ? Employee::with('user')->where('status', 'active')->get()->sortBy('user.name') : collect();
+        $statuses = $allowedStatuses;
 
-        return view('leave_requests.index', compact('leaveRequests', 'employees'));
+        // Passer toutes les valeurs de filtre à la vue
+        return view('leave_requests.index', compact(
+            'leaveRequests', 'employees', 'statusFilter', 'statuses',
+            'employeeFilter', 'dateFromFilter', 'dateToFilter' // Ajout des filtres date
+        ));
     }
 
     /**

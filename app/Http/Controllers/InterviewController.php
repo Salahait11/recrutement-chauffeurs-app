@@ -8,19 +8,61 @@ use App\Models\User;    // Pour lister les interviewers potentiels
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth; // Pour récupérer l'utilisateur connecté (planificateur)
 use Illuminate\Support\Facades\Redirect;
+use Carbon\Carbon;
 
 class InterviewController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+     public function index(Request $request) // <<< AJOUTER Request
     {
-         $interviews = Interview::with(['candidate', 'interviewer'])
-                                ->orderBy('interview_date', 'desc') // Trier par date décroissante
-                                ->paginate(15); // Ajouter la pagination
+        // Récupérer les filtres
+        $statusFilter = $request->query('status');
+        $candidateFilter = $request->query('candidate_id');
+        $dateFromFilter = $request->query('date_from');
+        $dateToFilter = $request->query('date_to');
 
-        return view('interviews.index', compact('interviews'));
+        // Requête de base
+        $query = Interview::with(['candidate', 'interviewer']); // Eager load
+
+        // Appliquer filtre Statut
+        $allowedStatuses = ['scheduled', 'completed', 'canceled', 'rescheduled'];
+        if ($statusFilter && $statusFilter !== 'all' && in_array($statusFilter, $allowedStatuses)) {
+             $query->where('status', $statusFilter);
+         } else { $statusFilter = null; }
+
+        // Appliquer filtre Candidat (accessible à l'admin)
+         // !! Ajouter logique de rôle si nécessaire !!
+         if (Auth::user()->isAdmin() && $candidateFilter) {
+             $query->where('candidate_id', $candidateFilter);
+         } else { $candidateFilter = null; } // Ignorer si pas admin ou pas de filtre
+
+         // Appliquer filtre Date (sur interview_date)
+         if ($dateFromFilter) {
+             try { $query->where('interview_date', '>=', Carbon::parse($dateFromFilter)->startOfDay()); }
+             catch (\Exception $e) { $dateFromFilter = null; }
+         }
+          if ($dateToFilter) {
+             try { $query->where('interview_date', '<=', Carbon::parse($dateToFilter)->endOfDay()); }
+             catch (\Exception $e) { $dateToFilter = null; }
+         }
+
+        // Trier et Paginer
+        $interviews = $query->orderBy('interview_date', 'desc')->paginate(15);
+
+        // Ajouter filtres à la pagination
+        $interviews->appends($request->only(['status', 'candidate_id', 'date_from', 'date_to']));
+
+        // Données pour les filtres de la vue
+        $statuses = $allowedStatuses;
+        $candidates = Auth::user()->isAdmin() ? Candidate::orderBy('last_name')->get(['id', 'first_name', 'last_name']) : collect();
+
+        // Passer les données à la vue
+        return view('interviews.index', compact(
+            'interviews', 'statuses', 'candidates',
+            'statusFilter', 'candidateFilter', 'dateFromFilter', 'dateToFilter'
+        ));
     }
 
     /**

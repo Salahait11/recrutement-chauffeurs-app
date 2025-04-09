@@ -1,44 +1,75 @@
 {{-- resources/views/candidates/index.blade.php --}}
 <x-app-layout>
     <x-slot name="header">
+        {{-- Conteneur Principal pour Titre, Filtres/Recherche, Bouton Ajouter --}}
         <div class="flex flex-wrap justify-between items-center gap-4">
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 {{ __('Liste des Candidats') }}
             </h2>
 
-            {{-- Formulaire de Recherche --}}
-            <div class="w-full sm:w-auto">
-                <form method="GET" action="{{ route('candidates.index') }}" class="flex flex-wrap items-center gap-2">
-                    <div class="relative flex-grow">
-                        <input type="text" name="search" placeholder="Rechercher nom, email..."
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600 text-sm pe-10"
-                            value="{{ $search ?? '' }}">
+            {{-- Conteneur pour les Filtres/Recherche --}}
+            <div class="flex flex-wrap items-center gap-4">
 
-                        <span class="absolute inset-y-0 end-0 flex items-center pe-3 text-gray-400 pointer-events-none">
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                            </svg>
-                        </span>
-                    </div>
+                {{-- Formulaire de Recherche (Adapté pour inclure statut) --}}
+                <div class="w-full sm:w-auto">
+                    <form method="GET" action="{{ route('candidates.index') }}" id="searchForm" class="flex items-center gap-2">
+                        {{-- Champ caché pour garder le filtre statut lors d'une recherche --}}
+                        @if(request('status') && request('status') != 'all')
+                            <input type="hidden" name="status" value="{{ request('status') }}">
+                        @endif
 
-                    <button type="submit"
-                        class="px-4 py-2 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-500 transition">
-                        Rechercher
-                    </button>
+                        <div class="relative flex-grow">
+                            <input type="text" name="search" placeholder="Rechercher nom, email..."
+                                   class="block w-full sm:w-56 rounded-md border-gray-300 shadow-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm pe-10"
+                                   value="{{ $search ?? '' }}">
+                            <span class="absolute inset-y-0 end-0 flex items-center pe-3 text-gray-400 pointer-events-none"><svg class="h-5 w-5">...</svg></span> {{-- Loupe --}}
+                            @if($search)
+                                {{-- Lien pour effacer SEULEMENT la recherche (garde le statut) --}}
+                                <a href="{{ route('candidates.index', ['status' => request('status')]) }}" class="absolute inset-y-0 end-10 flex items-center pe-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer" title="Effacer la recherche">
+                                     <svg class="h-4 w-4">...</svg> {{-- Croix --}}
+                                </a>
+                            @endif
+                        </div>
+                        {{-- Bouton Rechercher --}}
+                        <button type="submit" class="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                            Rechercher
+                        </button>
+                    </form>
+                </div>
 
-                    @if($search)
-                        <a href="{{ route('candidates.index') }}"
-                           class="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-                            Réinitialiser
+                {{-- Filtre Statut (Adapté pour inclure recherche) --}}
+                <div class="w-full sm:w-auto">
+                    <form method="GET" action="{{ route('candidates.index') }}" id="statusFilterForm">
+                        {{-- Champ caché pour garder la recherche lors du filtrage par statut --}}
+                        @if($search)<input type="hidden" name="search" value="{{ $search }}">@endif
+
+                        <label for="status_filter" class="sr-only">Filtrer par Statut</label>
+                        <select name="status" id="status_filter" onchange="this.form.submit();" {{-- Soumet au changement --}}
+                                class="block w-full sm:w-48 rounded-md border-gray-300 shadow-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                            <option value="all" {{ !$statusFilter || $statusFilter == 'all' ? 'selected' : '' }}>-- Tous les Statuts --</option>
+                            {{-- $statuses doit être passé par le contrôleur --}}
+                            @foreach($statuses ?? [] as $status)
+                                <option value="{{ $status }}" {{ $statusFilter == $status ? 'selected' : '' }}>
+                                    {{ ucfirst($status) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+                </div>
+
+                {{-- Bouton Réinitialiser TOUS les filtres --}}
+                @if($search || ($statusFilter && $statusFilter != 'all'))
+                    <div class="w-full sm:w-auto">
+                        <a href="{{ route('candidates.index') }}" class="inline-flex items-center px-4 py-2 text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                            Réinitialiser Tout
                         </a>
-                    @endif
-                </form>
-            </div>
+                    </div>
+                @endif
 
-            <a href="{{ route('candidates.create') }}"
-               class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+            </div> {{-- Fin Conteneur Filtres/Recherche --}}
+
+            {{-- Bouton Ajouter Candidat --}}
+            <a href="{{ route('candidates.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                 {{ __('+ Ajouter Candidat') }}
             </a>
         </div>

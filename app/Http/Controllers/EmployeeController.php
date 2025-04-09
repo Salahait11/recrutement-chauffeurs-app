@@ -18,40 +18,68 @@ class EmployeeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request) // <<< AJOUTER Request $request
-    {
-        $search = $request->query('search'); // Récupère le terme de recherche
+    public function index(Request $request)
+{
+    // Récupère tous les paramètres de filtre
+    $search = $request->query('search');
+    $statusFilter = $request->query('status', 'all');
+    $jobTitleFilter = $request->query('job_title');
+    
+    // Requête de base avec la relation 'user' chargée
+    $query = Employee::with(['user' => function($query) {
+        $query->select('id', 'name', 'email'); // Seulement les champs nécessaires
+    }]);
 
-        // Requête de base avec la relation 'user' chargée
-        $query = Employee::with('user');
-
-        // Appliquer le filtre si recherche
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                // Recherche dans la table 'employees'
-                $q->where('employee_number', 'LIKE', "%{$search}%")
-                  // Recherche dans la table 'users' liée (via une sous-requête 'whereHas')
-                  ->orWhereHas('user', function ($userQuery) use ($search) {
-                      $userQuery->where('name', 'LIKE', "%{$search}%")
-                                ->orWhere('email', 'LIKE', "%{$search}%");
-                  });
-            });
-        }
-
-        // Trier et paginer
-        // Trier par date d'embauche ou par nom d'utilisateur ?
-        $employees = $query->orderBy('hire_date', 'desc')->paginate(20);
-        // Ou par nom: $employees = $query->join('users', 'employees.user_id', '=', 'users.id')->orderBy('users.name', 'asc')->select('employees.*')->paginate(20); -> Plus complexe
-
-        // Ajouter la recherche aux liens de pagination
-        $employees->appends($request->only(['search']));
-
-        // Passer employés et terme de recherche à la vue (chemin admin ou non ?)
-        // Si tes vues sont dans /admin/employees :
-        // return view('admin.employees.index', compact('employees', 'search'));
-        // Si tes vues sont dans /employees :
-        return view('employees.index', compact('employees', 'search'));
+    // Appliquer les filtres
+    if ($search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('employee_number', 'LIKE', "%{$search}%")
+              ->orWhereHas('user', function ($userQuery) use ($search) {
+                  $userQuery->where('name', 'LIKE', "%{$search}%")
+                            ->orWhere('email', 'LIKE', "%{$search}%");
+              });
+        });
     }
+
+    // Filtre par statut
+    if ($statusFilter && $statusFilter !== 'all') {
+        $query->where('status', $statusFilter);
+    }
+
+    // Filtre par poste
+    if ($jobTitleFilter) {
+        $query->where('job_title', $jobTitleFilter);
+    }
+
+    // Options de tri
+    $sortBy = $request->query('sort_by', 'hire_date');
+    $sortDirection = $request->query('sort_dir', 'desc');
+
+    // Valider les paramètres de tri
+    $validSortColumns = ['hire_date', 'employee_number', 'job_title'];
+    $sortBy = in_array($sortBy, $validSortColumns) ? $sortBy : 'hire_date';
+    $sortDirection = in_array($sortDirection, ['asc', 'desc']) ? $sortDirection : 'desc';
+
+    // Trier et paginer
+    $employees = $query->orderBy($sortBy, $sortDirection)
+                      ->paginate(20)
+                      ->appends($request->query());
+
+    // Données supplémentaires pour les filtres
+    $statuses = ['active', 'on_leave', 'terminated']; // Ou récupérer depuis la DB si dynamique
+    $jobTitles = Employee::select('job_title')->distinct()->whereNotNull('job_title')->pluck('job_title');
+
+    return view('employees.index', compact(
+        'employees', 
+        'search',
+        'statusFilter',
+        'jobTitleFilter',
+        'statuses',
+        'jobTitles',
+        'sortBy',
+        'sortDirection'
+    ));
+}
 
     /**
      * Show the form for creating a new resource.

@@ -13,7 +13,8 @@ class CandidateController extends Controller
      */
     public function index(Request $request)
 {
-    $search = $request->query('search');
+     $search = $request->query('search');
+    $statusFilter = $request->query('status'); 
     Log::debug("Recherche Candidat - Terme: " . ($search ?? 'aucun')); // Log le terme
 
     $query = Candidate::query();
@@ -28,16 +29,22 @@ class CandidateController extends Controller
     } else {
          Log::debug("Recherche Candidat - Pas de filtre appliqué.");
     }
-
-    // Pour voir la requête SQL générée (utile pour le debug)
-    // Log::debug("Recherche Candidat - SQL: " . $query->toSql()); // Attention: ne montre pas les bindings %search%
+        if ($statusFilter && $statusFilter !== 'all') { // Ignorer si vide ou 'all'
+           
+                   $query->where('status', $statusFilter);
+            
+        }
 
     $candidates = $query->orderBy('created_at', 'desc')->paginate(15);
-    Log::debug("Recherche Candidat - Nombre de résultats trouvés: " . $candidates->total()); // Log le nombre de résultats
 
-    $candidates->appends($request->only(['search']));
+        // Ajouter les DEUX filtres à la pagination
+        $candidates->appends($request->only(['search', 'status']));
 
-    return view('candidates.index', compact('candidates', 'search'));
+        // Définir les statuts possibles pour la liste déroulante
+        $statuses = ['new', 'contacted', 'interview', 'test', 'offer', 'hired', 'rejected'];
+
+        // Passer les candidats, la recherche ET le filtre statut à la vue
+        return view('candidates.index', compact('candidates', 'search', 'statusFilter', 'statuses'));
 }
 
     /**

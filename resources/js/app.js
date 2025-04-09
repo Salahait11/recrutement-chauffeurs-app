@@ -1,4 +1,5 @@
 import "./bootstrap";
+import Chart from "chart.js/auto";
 
 // Alpine.js (si tu l'utilises ailleurs, sinon l'import seul suffit s'il est dans bootstrap.js)
 import Alpine from 'alpinejs';

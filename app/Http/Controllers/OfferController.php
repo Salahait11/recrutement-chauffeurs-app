@@ -11,27 +11,57 @@ use App\Models\Employee; // Ajouté
 use App\Models\User;
 use Illuminate\Support\Facades\DB;    // Ajouté
 use Illuminate\Support\Facades\Hash; 
-
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 class OfferController extends Controller
 {
     // Afficher la liste de toutes les offres
-    public function index()
+    public function index(Request $request) // <<< AJOUTER Request $request
     {
-        $offers = Offer::with('candidate')->orderBy('created_at', 'desc')->paginate(15);
-        return view('offers.index', compact('offers')); // Vue à créer
-    }
-    public function create()
-{
-     $candidates = Candidate::orderBy('last_name')->get(['id', 'first_name', 'last_name']);
-     return view('offers.create', compact('candidates')); // Passe $candidates
-}
+        $statusFilter = $request->query('status');
+        $candidateFilter = $request->query('candidate_id');
 
-    // Afficher le formulaire pour créer une offre pour UN candidat précis
-    public function createForCandidate(Candidate $candidate)
-    {
-        return view('offers.create', compact('candidate')); // Vue à créer
-    }
+        // Requête de base avec la relation 'candidate'
+        $query = Offer::with('candidate'); // Eager load candidat
 
+        // -- Appliquer Filtre Statut --
+        $allowedStatuses = ['draft', 'sent', 'accepted', 'rejected', 'expired', 'withdrawn'];
+        if ($statusFilter && $statusFilter !== 'all' && in_array($statusFilter, $allowedStatuses)) {
+             $query->where('status', $statusFilter);
+        } else { $statusFilter = null; }
+
+        // -- Appliquer Filtre Candidat --
+        if ($candidateFilter) {
+             // Valider que c'est un ID existant? Pas forcément nécessaire pour un filtre simple
+             $query->where('candidate_id', $candidateFilter);
+        }
+
+        // Trier et Paginer
+        $offers = $query->orderBy('created_at', 'desc')->paginate(15);
+
+        // Ajouter les filtres à la pagination
+        $offers->appends($request->only(['status', 'candidate_id']));
+
+        // Récupérer les candidats qui ont reçu une offre (pour le filtre)
+        // Ou tous les candidats actifs ? Pour l'instant, ceux avec une offre.
+         $candidatesWithOffers = Candidate::whereHas('offers') // Ne prend que les candidats ayant au moins une offre
+                                       ->orderBy('last_name')->orderBy('first_name')
+                                       ->get(['id', 'first_name', 'last_name']);
+         // Alternative: $candidates = Candidate::orderBy('last_name')...->get(); pour tous
+
+         // Définir les statuts possibles pour le filtre
+         $statuses = $allowedStatuses;
+
+        // Passer les données à la vue
+        return view('offers.index', compact(
+            'offers',
+            'statusFilter',
+            'statuses',
+            'candidateFilter',
+            'candidatesWithOffers' // Ou $candidates si tu préfères tous les afficher
+        ));
+    }
     /**
  * Store a newly created resource in storage.
  */
@@ -65,7 +95,7 @@ public function store(Request $request)
      try {
         $offer = Offer::create($validatedData);
      } catch (\Exception $e) {
-         \Log::error("Erreur création offre: " . $e->getMessage());
+         Log::error("Erreur création offre: " . $e->getMessage());
          return Redirect::back()->withInput()->with('error', 'Erreur lors de la création de l\'offre.');
      }
 
@@ -166,7 +196,7 @@ public function update(Request $request, Offer $offer)
                 DB::commit();
 
                  // Envoyer email avec mot de passe temporaire ? Loguer le mot de passe ?
-                 \Log::info("Employé créé pour {$user->email}. MDP temporaire: {$tempPassword}"); // !! A SUPPRIMER EN PROD !!
+                 Log::info("Employé créé pour {$user->email}. MDP temporaire: {$tempPassword}"); // !! A SUPPRIMER EN PROD !!
 
                 return Redirect::route('employees.show', $employee->id) // Rediriger vers la fiche employé (page à créer)
                                ->with('success', 'Offre ACCEPTÉE. Employé créé avec succès ! (MDP temporaire: '.$tempPassword.')'); // !! Message à adapter !!
@@ -174,7 +204,7 @@ public function update(Request $request, Offer $offer)
             } catch (\Exception $e) {
                 // Annuler la transaction en cas d'erreur
                 DB::rollBack();
-                \Log::error("Erreur lors de l'acceptation de l'offre et création employé: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+                Log::error("Erreur lors de l'acceptation de l'offre et création employé: " . $e->getMessage() . "\n" . $e->getTraceAsString());
                 return Redirect::route('offers.show', $offer->id)->with('error', 'Erreur lors de l\'acceptation de l\'offre.');
             }
 
@@ -212,7 +242,7 @@ public function destroy(Offer $offer)
          $offer->delete();
          return Redirect::route('offers.index')->with('success', 'Offre supprimée avec succès !');
      } catch (\Exception $e) {
-         \Log::error("Erreur suppression offre ID {$offer->id}: " . $e->getMessage());
+         Log::error("Erreur suppression offre ID {$offer->id}: " . $e->getMessage());
          return Redirect::route('offers.index')->with('error', 'Erreur lors de la suppression de l\'offre.');
      }
 }

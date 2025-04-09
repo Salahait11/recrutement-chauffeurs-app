@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function () {
 
     // Offres
     Route::get('/candidates/{candidate}/offers/create', [OfferController::class, 'createForCandidate'])->name('candidates.offers.create');
+    Route::get('/offers/{offer}/pdf', [OfferController::class, 'downloadOfferPdf'])->name('offers.pdf');
     Route::resource('offers', OfferController::class)->except(['create']);
 
     // Employés
@@ -78,6 +79,8 @@ Route::middleware('auth')->group(function () {
      Route::resource('vehicles', VehicleController::class);
       Route::resource('evaluation-criteria', EvaluationCriterionController::class)
           ->parameters(['evaluation-criteria' => 'criterion']); // Renomme paramètre
+      Route::get('/reports/export/employees', [ReportController::class, 'exportEmployeesCsv'])
+          ->name('reports.export.employees');
     });
 
 

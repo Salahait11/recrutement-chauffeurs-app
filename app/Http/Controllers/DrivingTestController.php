@@ -9,18 +9,61 @@ use App\Models\Vehicle; // Ne pas oublier Vehicle
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Carbon\Carbon;
 
 class DrivingTestController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+     public function index(Request $request) // <<< AJOUTER Request
     {
-        $drivingTests = DrivingTest::with(['candidate', 'evaluator', 'vehicle'])
-                                  ->orderBy('test_date', 'desc')
-                                  ->paginate(15);
-        return view('driving_tests.index', compact('drivingTests'));
+        // Récupérer les filtres
+        $statusFilter = $request->query('status');
+        $candidateFilter = $request->query('candidate_id');
+        $dateFromFilter = $request->query('date_from');
+        $dateToFilter = $request->query('date_to');
+        // Ajouter d'autres filtres si besoin (evaluator_id, vehicle_id)
+
+        $query = DrivingTest::with(['candidate', 'evaluator', 'vehicle']);
+
+        // Filtre Statut
+        $allowedStatuses = ['scheduled', 'completed', 'canceled'];
+        if ($statusFilter && $statusFilter !== 'all' && in_array($statusFilter, $allowedStatuses)) {
+             $query->where('status', $statusFilter);
+         } else { $statusFilter = null; }
+
+        // Filtre Candidat (Admin)
+        // !! Adapter rôles !!
+         if (Auth::user()->isAdmin() && $candidateFilter) {
+             $query->where('candidate_id', $candidateFilter);
+         } else { $candidateFilter = null; }
+
+         // Filtre Date (sur test_date)
+         if ($dateFromFilter) {
+             try { $query->where('test_date', '>=', Carbon::parse($dateFromFilter)->startOfDay()); }
+             catch (\Exception $e) { $dateFromFilter = null; }
+         }
+          if ($dateToFilter) {
+             try { $query->where('test_date', '<=', Carbon::parse($dateToFilter)->endOfDay()); }
+             catch (\Exception $e) { $dateToFilter = null; }
+         }
+
+        // Trier et Paginer
+        $drivingTests = $query->orderBy('test_date', 'desc')->paginate(15);
+
+        // Appends (ajoute tous les filtres utilisés)
+        $drivingTests->appends($request->only(['status', 'candidate_id', 'date_from', 'date_to']));
+
+        // Données pour les filtres de la vue
+        $statuses = $allowedStatuses;
+        $candidates = Auth::user()->isAdmin() ? Candidate::orderBy('last_name')->get(['id', 'first_name', 'last_name']) : collect();
+
+        // Passer les données et filtres actifs à la vue
+        return view('driving_tests.index', compact( // Adapte le chemin si besoin
+            'drivingTests', 'statuses', 'candidates',
+            'statusFilter', 'candidateFilter', 'dateFromFilter', 'dateToFilter'
+        ));
     }
 
     /**
