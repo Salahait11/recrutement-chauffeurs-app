@@ -1,168 +1,155 @@
-{{-- resources/views/driving_tests/index.blade.php --}}
+{{-- resources/views/admin/reports/index.blade.php --}}
 <x-app-layout>
     <x-slot name="header">
-         <div class="flex flex-wrap justify-between items-center gap-4">
+        <div class="flex flex-wrap justify-between items-center gap-4">
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                {{ __('Liste des Tests de Conduite') }}
+                {{ __('Rapports & Statistiques') }}
             </h2>
 
-            {{-- Formulaire unique pour tous les filtres --}}
-            <form method="GET" action="{{ route('driving-tests.index') }}" class="flex flex-wrap items-end gap-3 text-sm flex-grow md:flex-grow-0">
-
-                 {{-- Filtre Candidat (Seulement pour Admin/Manager) --}}
-                 @if(Auth::user()->isAdmin()) {{-- !! Adapter condition rôles !! --}}
-                     <div class="flex-grow sm:flex-grow-0">
-                         <label for="candidate_filter_dt" class="block font-medium text-xs text-gray-700 dark:text-gray-300">Candidat</label>
-                         <select name="candidate_id" id="candidate_filter_dt" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-xs">
-                             <option value="">Tous</option>
-                             {{-- $candidates est passé par le contrôleur --}}
-                             @foreach($candidates ?? [] as $candidate)
-                                 <option value="{{ $candidate->id }}" {{ ($candidateFilter ?? null) == $candidate->id ? 'selected' : '' }}>
-                                     {{ $candidate->first_name }} {{ $candidate->last_name }}
-                                 </option>
-                             @endforeach
-                         </select>
-                     </div>
+            {{-- Formulaire Filtre Dates pour les Événements --}}
+            <form method="GET" action="{{ route('admin.reports.index') }}" class="flex flex-wrap items-end gap-3 text-sm">
+                <div>
+                    <label for="start_date" class="block font-medium text-xs text-gray-700 dark:text-gray-300">Événements Du</label>
+                    <input type="date" name="start_date" id="start_date"
+                           class="block mt-1 w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-xs"
+                           value="{{ $startDate->toDateString() }}">
+                </div>
+                <div>
+                    <label for="end_date" class="block font-medium text-xs text-gray-700 dark:text-gray-300">Au</label>
+                    <input type="date" name="end_date" id="end_date"
+                           class="block mt-1 w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-xs"
+                           value="{{ $endDate->toDateString() }}">
+                </div>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                    Filtrer Période
+                </button>
+                 {{-- Bouton Réinitialiser Dates --}}
+                 @if(request('start_date') || request('end_date'))
+                     <a href="{{ route('admin.reports.index') }}" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 border border-transparent rounded-md font-semibold text-xs text-gray-800 dark:text-gray-100 uppercase tracking-widest hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" title="Afficher période par défaut">
+                         Période Défaut
+                     </a>
                  @endif
-
-                 {{-- Filtre Statut --}}
-                  <div class="flex-grow sm:flex-grow-0">
-                     <label for="status_filter_dt" class="block font-medium text-xs text-gray-700 dark:text-gray-300">Statut</label>
-                     <select name="status" id="status_filter_dt" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-xs">
-                         <option value="all" {{ !$statusFilter ? 'selected' : '' }}>Tous</option>
-                          {{-- $statuses est passé par le contrôleur --}}
-                         @foreach($statuses ?? [] as $status)
-                             <option value="{{ $status }}" {{ $statusFilter == $status ? 'selected' : '' }}>
-                                 {{ ucfirst($status) }}
-                             </option>
-                         @endforeach
-                     </select>
-                  </div>
-
-                  {{-- Filtre Date Début Période --}}
-                  <div class="flex-grow sm:flex-grow-0">
-                      <label for="date_from" class="block font-medium text-xs text-gray-700 dark:text-gray-300">Test Du</label>
-                      <input type="date" name="date_from" id="date_from"
-                             class="block mt-1 w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-xs"
-                             value="{{ $dateFromFilter ?? '' }}">
-                  </div>
-                   {{-- Filtre Date Fin Période --}}
-                  <div class="flex-grow sm:flex-grow-0">
-                      <label for="date_to" class="block font-medium text-xs text-gray-700 dark:text-gray-300">Au</label>
-                      <input type="date" name="date_to" id="date_to"
-                             class="block mt-1 w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-xs"
-                             value="{{ $dateToFilter ?? '' }}">
-                  </div>
-
-                  {{-- Boutons --}}
-                  <div class="flex items-center gap-2 pt-5">
-                      <button type="submit" class="px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
-                          Filtrer
-                      </button>
-                      {{-- Bouton Réinitialiser --}}
-                      @if($statusFilter || $candidateFilter || $dateFromFilter || $dateToFilter)
-                          <a href="{{ route('driving-tests.index') }}" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 border border-transparent rounded-md font-semibold text-xs text-gray-800 dark:text-gray-100 uppercase tracking-widest hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" title="Réinitialiser les filtres">
-                              ↻
-                          </a>
-                      @endif
-                  </div>
-             </form> {{-- Fin Formulaire Filtres --}}
-
-              {{-- Bouton Planifier Test --}}
-             <div class="w-full sm:w-auto mt-4 sm:mt-0">
-                <a href="{{ route('driving-tests.create') }}" class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
-                    {{ __('Planifier un Test') }}
-                </a>
-             </div>
-
-         </div>
+            </form>
+        </div>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
 
-                     {{-- Messages Flash --}}
-                    @if (session('success')) <div class="mb-4 bg-green-100 border border-green-400 text-green-700 dark:text-green-200 dark:border-green-700 px-4 py-3 rounded relative">{{ session('success') }}</div> @endif
-                    @if (session('error')) <div class="mb-4 bg-red-100 border border-red-400 text-red-700 dark:text-red-200 dark:border-red-700 px-4 py-3 rounded relative">{{ session('error') }}</div> @endif
-                    @if (session('info')) <div class="mb-4 bg-blue-100 border border-blue-400 text-blue-700 dark:text-blue-200 dark:border-blue-700 px-4 py-3 rounded relative">{{ session('info') }}</div> @endif
+             {{-- Messages Flash --}}
+            @if (session('success')) <div class="mb-6 bg-green-100 ...">{{ session('success') }}</div> @endif
+            @if (session('error')) <div class="mb-6 bg-red-100 ...">{{ session('error') }}</div> @endif
+
+             {{-- Section Statistiques Générales --}}
+             <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4">Statistiques Globales (Actuelles)</h3>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                 {{-- Carte Stats Candidats --}}
+                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                     <div class="p-6 text-gray-900 dark:text-gray-100">
+                         <h4 class="text-lg font-semibold border-b pb-2 mb-4 dark:border-gray-700">Statut Candidats</h4>
+                         <div class="mb-4 h-64 flex justify-center items-center">
+                              {{-- Utilisation de l'objet $candidateChart --}}
+                              @if($candidateChart)
+                                 <x-chartjs-component :chart="$candidateChart" />
+                              @else
+                                 <p class="text-gray-500 dark:text-gray-400 italic">Aucune donnée candidat.</p>
+                              @endif
+                         </div>
+                          {{-- Vérifie $rawCandidateStats avant la boucle --}}
+                          @if($rawCandidateStats && $rawCandidateStats->count() > 0)
+                            <ul class="space-y-1 text-sm mt-4 border-t pt-4 dark:border-gray-700">
+                                @foreach($rawCandidateStats as $status => $count) <li class="flex justify-between"><span>{{ ucfirst($status) }}</span><span class="font-semibold">{{ $count }}</span></li> @endforeach
+                                <li class="flex justify-between font-bold border-t dark:border-gray-600 pt-1 mt-1"><span>Total</span><span>{{ $rawCandidateStats->sum() }}</span></li>
+                            </ul>
+                          @endif
+                         <div class="mt-4 text-center"><a href="{{ route('candidates.index') }}" class="text-sm text-blue-500 hover:underline">Voir tous les candidats →</a></div>
+                     </div>
+                 </div>
+                 {{-- Carte Stats Employés --}}
+                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                     <div class="p-6 text-gray-900 dark:text-gray-100">
+                          <h4 class="text-lg font-semibold border-b pb-2 mb-4 dark:border-gray-700">Statut Employés</h4>
+                           <div class="mb-4 h-64 flex justify-center items-center">
+                                {{-- Utilisation de l'objet $employeeChart --}}
+                                @if($employeeChart) <x-chartjs-component :chart="$employeeChart" />
+                                 @else <p class="text-gray-500 dark:text-gray-400 italic">Aucune donnée employé.</p> @endif
+                           </div>
+                           {{-- Vérifie $rawEmployeeStats avant la boucle --}}
+                           @if($rawEmployeeStats && $rawEmployeeStats->count() > 0)
+                             <ul class="space-y-1 text-sm mt-4 border-t pt-4 dark:border-gray-700">
+                                  @foreach($rawEmployeeStats as $status => $count) <li class="flex justify-between"><span>{{ ucfirst($status) }}</span><span class="font-semibold">{{ $count }}</span></li> @endforeach
+                                  <li class="flex justify-between font-bold border-t dark:border-gray-600 pt-1 mt-1"><span>Total</span><span>{{ $rawEmployeeStats->sum() }}</span></li>
+                             </ul>
+                           @else
+                             <p class="text-center text-gray-500 dark:text-gray-400 italic mt-4 border-t pt-4 dark:border-gray-700">Aucune donnée employé.</p>
+                           @endif
+                          <div class="mt-4 text-center"><a href="{{ route('employees.index') }}" class="text-sm text-blue-500 hover:underline">Voir tous les employés →</a></div>
+                     </div>
+                 </div>
+             </div> {{-- Fin grid stats --}}
 
 
-                    {{-- Tableau des tests --}}
-                    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                        <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3">Candidat</th>
-                                    <th scope="col" class="px-6 py-3">Date & Heure</th>
-                                    <th scope="col" class="px-6 py-3">Véhicule</th>
-                                    <th scope="col" class="px-6 py-3">Évaluateur</th>
-                                    <th scope="col" class="px-6 py-3">Statut</th>
-                                    <th scope="col" class="px-6 py-3">Résultat</th>
-                                    <th scope="col" class="px-6 py-3"><span class="sr-only">Actions</span></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($drivingTests as $test)
-                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                        <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                             @if($test->candidate)
-                                                <a href="{{ route('candidates.show', $test->candidate->id) }}" class="hover:underline">
-                                                    {{ $test->candidate->first_name }} {{ $test->candidate->last_name }}
-                                                </a>
-                                            @else <span class="italic text-gray-400">N/A</span> @endif
-                                        </td>
-                                        <td class="px-6 py-4">{{ $test->test_date->format('d/m/Y H:i') }}</td>
-                                        <td class="px-6 py-4 text-xs">{{ $test->vehicle ? ($test->vehicle->brand.' '.$test->vehicle->model.' ('.$test->vehicle->plate_number.')') : '-' }}</td>
-                                        <td class="px-6 py-4">{{ $test->evaluator->name ?? '-' }}</td>
-                                        <td class="px-6 py-4">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                                @switch($test->status)
-                                                    @case('completed') bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 @break
-                                                    @case('canceled') bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100 @break
-                                                    @default bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100 {{-- scheduled --}}
-                                                @endswitch
-                                            ">
-                                                {{ ucfirst($test->status) }}
-                                            </span>
-                                        </td>
-                                         <td class="px-6 py-4">
-                                             @if($test->status === 'completed')
-                                                 @if($test->passed === true) <span class="text-green-600 font-semibold">Réussi</span>
-                                                 @elseif($test->passed === false) <span class="text-red-600 font-semibold">Échoué</span>
-                                                 @else <span class="text-gray-500 italic">N/D</span> @endif
-                                             @else - @endif
-                                         </td>
-                                        <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
-                                             <a href="{{ route('driving-tests.show', $test->id) }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Voir</a>
-                                             <a href="{{ route('driving-tests.edit', $test->id) }}" class="font-medium text-indigo-600 dark:text-indigo-500 hover:underline">Modifier</a>
-                                             <form action="{{ route('driving-tests.destroy', $test->id) }}" method="POST" onsubmit="return confirm('Supprimer ce test ?');" class="inline">
-                                                 @csrf @method('DELETE')
-                                                 <button type="submit" class="font-medium text-red-600 dark:text-red-500 hover:underline">Supprimer</button>
-                                             </form>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    @php $colspan = Auth::user()->isAdmin() ? 8 : 7; @endphp {{-- Ajuster colspan --}}
-                                    <tr><td colspan="{{ $colspan }}" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                                         Aucun test trouvé pour les critères sélectionnés.
-                                          @if($statusFilter || $candidateFilter || $dateFromFilter || $dateToFilter)
-                                              <a href="{{ route('driving-tests.index') }}" class="ml-2 text-sm text-blue-500 hover:underline">(Réinitialiser les filtres)</a>
-                                          @endif
-                                    </td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+              {{-- Section Événements sur la Période Sélectionnée --}}
+              <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                  Congés & Absences du {{ $startDate->isoFormat('D MMM YYYY') }} au {{ $endDate->isoFormat('D MMM YYYY') }}
+              </h3>
+              <div class="mb-6 bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                 <div class="p-6 text-gray-900 dark:text-gray-100">
+                       {{-- Utilise $periodEvents --}}
+                      @if($periodEvents && $periodEvents->count() > 0)
+                         <ul class="space-y-3">
+                             @foreach($periodEvents as $event)
+                             <li class="border-l-4 pl-3 {{ $event->is_absence ? ($event->css_class ? 'border-orange-400 dark:border-orange-500' : 'border-gray-400 dark:border-gray-500') : ($event->css_class ? 'border-green-400 dark:border-green-500' : 'border-blue-400 dark:border-blue-500') }}">
+                                   @if($event->url)<a href="{{ $event->url }}" class="text-blue-600 dark:text-blue-400 hover:underline"> <span class="font-semibold">{{ $event->employee_name }}</span> - <span class="{{ $event->css_class ?? '' }}">{{ $event->type }}</span></a>
+                                   @else <span class="font-semibold">{{ $event->employee_name }}</span> - <span class="{{ $event->css_class ?? '' }}">{{ $event->type }}</span> @endif
+                                   <br>
+                                   <span class="text-xs text-gray-600 dark:text-gray-400">
+                                       @if($event->date->isSameDay($event->end_date)) Le {{ $event->date->isoFormat('ddd D MMM YYYY') }} @if($event->date->format('H:i:s') !== '00:00:00' || $event->end_date->format('H:i:s') !== '23:59:59') (de {{ $event->date->format('H:i') }} à {{ $event->end_date->format('H:i') }}) @endif
+                                       @else Du {{ $event->date->isoFormat('ddd D MMM YYYY') }} au {{ $event->end_date->isoFormat('ddd D MMM YYYY') }} @endif
+                                   </span>
+                             </li>
+                             @endforeach
+                         </ul>
+                     @else
+                         <p class="text-gray-500 dark:text-gray-400 italic">Aucun congé ou absence enregistré pour cette période.</p>
+                     @endif
+                     <div class="mt-4"><a href="{{ route('calendar.index') }}" class="text-sm text-blue-500 hover:underline">Voir le calendrier complet →</a></div>
+                 </div>
+             </div>
 
-                    {{-- Pagination --}}
-                    <div class="mt-4">
-                        {{ $drivingTests->links() }}
-                    </div>
+             {{-- Section Graphique Congés par Type sur la Période --}}
+              <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                  Congés Approuvés par Type ({{ $startDate->isoFormat('D MMM') }} - {{ $endDate->isoFormat('D MMM YYYY') }})
+              </h3>
+              <div class="mb-6 bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                 <div class="p-6 text-gray-900 dark:text-gray-100">
+                      <div class="h-72">
+                           {{-- Utilise l'objet $leaveByTypeChart --}}
+                            @if($leaveByTypeChart)
+                               <x-chartjs-component :chart="$leaveByTypeChart" />
+                            @else
+                               <p class="text-gray-500 dark:text-gray-400 italic text-center pt-10">Aucune donnée de congé approuvé pour cette période.</p>
+                            @endif
+                      </div>
+                 </div>
+             </div>
 
-                </div> {{-- Fin p-6 --}}
-            </div> {{-- Fin bg-white --}}
-        </div> {{-- Fin max-w --}}
-    </div> {{-- Fin py-12 --}}
-</x-app-layout>
+
+              {{-- Section Exports --}}
+              <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4">Exports</h3>
+              <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                 <div class="p-6 text-gray-900 dark:text-gray-100">
+                     <div id="export-buttons" class="flex flex-wrap gap-4">
+                           {{-- Bouton Export Employés CSV --}}
+                          <a href="{{ route('admin.reports.export.employees') }}" class="inline-flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 ..."> <svg>...</svg> Employés Actifs (CSV) </a>
+                          {{-- Ajouter d'autres boutons ici --}}
+                     </div>
+                 </div>
+             </div>
+
+         </div> {{-- Fin max-w --}}
+     </div> {{-- Fin py-12 --}}
+
+      {{-- Pas besoin de @push('scripts') si delivery='cdn' est dans config/chart.js.php --}}
+
+ </x-app-layout>

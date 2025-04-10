@@ -52,7 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/offers/{offer}/pdf', [OfferController::class, 'downloadOfferPdf'])->name('offers.pdf');
     Route::resource('offers', OfferController::class)->except(['create']);
 
-    // Employés
+    Route::get('/employees/{employee}/pdf', [EmployeeController::class, 'downloadEmployeePdf'])->name('employees.pdf');
     Route::resource('employees', EmployeeController::class);
 
     // Demandes de Congé

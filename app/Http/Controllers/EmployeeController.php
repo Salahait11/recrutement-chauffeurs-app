@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash; // Si on gérait le mot de passe ici
 use Illuminate\Validation\Rule; // Pour les règles unique complexes
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class EmployeeController extends Controller
@@ -299,5 +300,34 @@ class EmployeeController extends Controller
              return Redirect::route('employees.index')->with('error', 'Erreur suppression.');
          }
          */
+    }
+     public function downloadEmployeePdf(Employee $employee)
+    {
+         // Charger les relations nécessaires
+         $employee->load(['user', 'manager', 'candidate']);
+
+         // Vérifier que l'utilisateur existe
+         if (!$employee->user) {
+             Log::error("Tentative génération PDF pour employé {$employee->id} sans utilisateur lié.");
+             return Redirect::back()->with('error', 'Impossible de générer le PDF : utilisateur associé introuvable.');
+         }
+
+         // Nom du fichier
+         $filename = 'Fiche_Employe_' . Str::slug($employee->user->name) . '_' . $employee->id . '.pdf';
+
+         // Générer le PDF
+         try {
+             $pdf = Pdf::loadView('pdfs.employee_summary', compact('employee')); // Utilise la vue pdfs/employee_summary
+
+             // Télécharger
+             return $pdf->download($filename);
+
+             // Ou afficher dans le navigateur
+             // return $pdf->stream($filename);
+
+         } catch (\Exception $e) {
+             Log::error("Erreur génération PDF employé {$employee->id}: " . $e->getMessage());
+             return Redirect::back()->with('error', 'Erreur lors de la génération du PDF.');
+         }
     }
 }

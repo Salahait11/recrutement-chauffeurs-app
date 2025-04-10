@@ -11,6 +11,17 @@
       0 => 'Barryvdh\\DomPDF\\ServiceProvider',
     ),
   ),
+  'icehouse-ventures/laravel-chartjs' => 
+  array (
+    'aliases' => 
+    array (
+      'Chartjs' => 'IcehouseVentures\\LaravelChartjs\\Facades\\Chartjs',
+    ),
+    'providers' => 
+    array (
+      0 => 'IcehouseVentures\\LaravelChartjs\\Providers\\ChartjsServiceProvider',
+    ),
+  ),
   'laravel/breeze' => 
   array (
     'providers' => 

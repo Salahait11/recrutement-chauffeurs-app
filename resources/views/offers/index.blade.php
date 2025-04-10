@@ -15,9 +15,8 @@
                      <label for="candidate_filter_offer" class="block font-medium text-xs text-gray-700 dark:text-gray-300">Candidat</label>
                      <select name="candidate_id" id="candidate_filter_offer" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-xs">
                          <option value="">-- Tous Candidats --</option>
-                         {{-- $candidatesWithOffers est passé par le contrôleur --}}
                          @foreach($candidatesWithOffers as $candidate)
-                             <option value="{{ $candidate->id }}" {{ ($candidateFilter ?? null) == $candidate->id ? 'selected' : '' }}> {{-- Utilise $candidateFilter --}}
+                             <option value="{{ $candidate->id }}" {{ ($candidateFilter ?? null) == $candidate->id ? 'selected' : '' }}>
                                  {{ $candidate->first_name }} {{ $candidate->last_name }}
                              </option>
                          @endforeach
@@ -29,13 +28,26 @@
                      <label for="status_filter_offer" class="block font-medium text-xs text-gray-700 dark:text-gray-300">Statut</label>
                      <select name="status" id="status_filter_offer" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-xs">
                          <option value="all" {{ !$statusFilter || $statusFilter == 'all' ? 'selected' : '' }}>-- Tous Statuts --</option>
-                         {{-- $statuses est passé par le contrôleur --}}
                          @foreach($statuses as $status)
                              <option value="{{ $status }}" {{ $statusFilter == $status ? 'selected' : '' }}>
                                  {{ ucfirst($status) }}
                              </option>
                          @endforeach
                      </select>
+                  </div>
+                  
+                  {{-- Filtre Date Début --}}
+                  <div class="flex-grow sm:flex-grow-0">
+                      <label for="date_from" class="block font-medium text-xs text-gray-700 dark:text-gray-300">Date début</label>
+                      <input type="date" name="date_from" id="date_from" value="{{ $dateFrom ?? '' }}" 
+                          class="block mt-1 w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-xs">
+                  </div>
+                  
+                  {{-- Filtre Date Fin --}}
+                  <div class="flex-grow sm:flex-grow-0">
+                      <label for="date_to" class="block font-medium text-xs text-gray-700 dark:text-gray-300">Date fin</label>
+                      <input type="date" name="date_to" id="date_to" value="{{ $dateTo ?? '' }}" 
+                          class="block mt-1 w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-xs">
                   </div>
 
                    {{-- Boutons --}}
@@ -44,7 +56,7 @@
                           Filtrer
                       </button>
                       {{-- Bouton Réinitialiser --}}
-                      @if($statusFilter || $candidateFilter)
+                      @if($statusFilter || $candidateFilter || isset($dateFrom) || isset($dateTo))
                           <a href="{{ route('offers.index') }}" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 border border-transparent rounded-md font-semibold text-xs text-gray-800 dark:text-gray-100 uppercase tracking-widest hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" title="Réinitialiser les filtres">
                               ↻ {{-- Symbole Recharger/Reset --}}
                           </a>
@@ -127,7 +139,7 @@
                                 @empty
                                     <tr><td colspan="8" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                         Aucune offre trouvée pour les critères sélectionnés.
-                                         @if($statusFilter || $candidateFilter)<a href="{{ route('offers.index') }}" class="ml-2 text-sm text-blue-500 hover:underline">(Réinitialiser les filtres)</a>@endif
+                                         @if($statusFilter || $candidateFilter || isset($dateFrom) || isset($dateTo))<a href="{{ route('offers.index') }}" class="ml-2 text-sm text-blue-500 hover:underline">(Réinitialiser les filtres)</a>@endif
                                     </td></tr>
                                 @endforelse
                             </tbody>

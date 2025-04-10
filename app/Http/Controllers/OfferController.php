@@ -17,49 +17,52 @@ use Illuminate\Support\Str;
 class OfferController extends Controller
 {
     // Afficher la liste de toutes les offres
-    public function index(Request $request) // <<< AJOUTER Request $request
+    public function index(Request $request)
     {
-        $statusFilter = $request->query('status');
-        $candidateFilter = $request->query('candidate_id');
-
-        // Requête de base avec la relation 'candidate'
-        $query = Offer::with('candidate'); // Eager load candidat
-
-        // -- Appliquer Filtre Statut --
-        $allowedStatuses = ['draft', 'sent', 'accepted', 'rejected', 'expired', 'withdrawn'];
-        if ($statusFilter && $statusFilter !== 'all' && in_array($statusFilter, $allowedStatuses)) {
-             $query->where('status', $statusFilter);
-        } else { $statusFilter = null; }
-
-        // -- Appliquer Filtre Candidat --
+        // Récupérer les filtres
+        $candidateFilter = $request->input('candidate_id');
+        $statusFilter = $request->input('status', 'all');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+        
+        // Commencer la requête
+        $query = Offer::with('candidate');
+        
+        // Appliquer les filtres
         if ($candidateFilter) {
-             // Valider que c'est un ID existant? Pas forcément nécessaire pour un filtre simple
-             $query->where('candidate_id', $candidateFilter);
+            $query->where('candidate_id', $candidateFilter);
         }
-
-        // Trier et Paginer
-        $offers = $query->orderBy('created_at', 'desc')->paginate(15);
-
-        // Ajouter les filtres à la pagination
-        $offers->appends($request->only(['status', 'candidate_id']));
-
-        // Récupérer les candidats qui ont reçu une offre (pour le filtre)
-        // Ou tous les candidats actifs ? Pour l'instant, ceux avec une offre.
-         $candidatesWithOffers = Candidate::whereHas('offers') // Ne prend que les candidats ayant au moins une offre
-                                       ->orderBy('last_name')->orderBy('first_name')
-                                       ->get(['id', 'first_name', 'last_name']);
-         // Alternative: $candidates = Candidate::orderBy('last_name')...->get(); pour tous
-
-         // Définir les statuts possibles pour le filtre
-         $statuses = $allowedStatuses;
-
-        // Passer les données à la vue
+        
+        if ($statusFilter && $statusFilter != 'all') {
+            $query->where('status', $statusFilter);
+        }
+        
+        // Appliquer les filtres de date
+        if ($dateFrom) {
+            $query->whereDate('created_at', '>=', $dateFrom);
+        }
+        
+        if ($dateTo) {
+            $query->whereDate('created_at', '<=', $dateTo);
+        }
+        
+        // Récupérer les offres paginées
+        $offers = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+        
+        // Récupérer les candidats qui ont des offres pour le filtre
+        $candidatesWithOffers = Candidate::whereHas('offers')->get();
+        
+        // Récupérer les statuts possibles pour le filtre
+        $statuses = ['draft', 'sent', 'accepted', 'rejected', 'expired', 'withdrawn'];
+        
         return view('offers.index', compact(
-            'offers',
+            'offers', 
+            'candidatesWithOffers', 
+            'statuses', 
+            'candidateFilter', 
             'statusFilter',
-            'statuses',
-            'candidateFilter',
-            'candidatesWithOffers' // Ou $candidates si tu préfères tous les afficher
+            'dateFrom',
+            'dateTo'
         ));
     }
     /**
