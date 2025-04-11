@@ -28,17 +28,19 @@ class DrivingTestController extends Controller
         return view('driving-tests.index', compact('drivingTests'));
     }
 
-   public function create()
-   {
-       $candidates = Candidate::where('status', Candidate::STATUS_EN_COURS)
-           ->orderBy('last_name')
-           ->orderBy('first_name')
-           ->get();
+    public function create()
+    {
+        $candidates = Candidate::where('status', Candidate::STATUS_EN_COURS)
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
 
-       $evaluators = Employee::all();
+        $evaluators = Employee::all();
 
-       return view('driving-tests.create', compact('candidates', 'evaluators'));
-   }
+        $vehicles = DrivingTest::getVehicleTypes();
+
+        return view('driving-tests.create', compact('candidates', 'evaluators', 'vehicles'));
+    }
 
     public function store(Request $request)
     {
