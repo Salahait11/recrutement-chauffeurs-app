@@ -89,13 +89,12 @@ class DrivingTestController extends Controller
             }
 
             $conflictingTest = DrivingTest::where('status', DrivingTest::STATUS_SCHEDULED)->where('test_date', $validatedData['test_date'])->where(function ($query) use ($validatedData) {
-                $query->where('vehicle_id', $validatedData['vehicle_id'])
-                    ->orWhere('interviewer_id', $validatedData['interviewer_id']);
-            })->exists();
-                })
-                ->exists();
+                    $query->where('vehicle_id', $validatedData['vehicle_id'])
+                          ->orWhere('interviewer_id', $validatedData['interviewer_id']);
+                })->exists();
+
             if ($conflictingTest) {
-                throw new \Exception('Conflit d horaire: Le véhicule ou l examinateur est déjà réservé à cette date/heure.');
+                throw new \Exception('Conflit d\'horaire: Le véhicule ou l\'examinateur est déjà réservé à cette date/heure.');
             }
 
             $test = DrivingTest::create([
@@ -118,7 +117,7 @@ class DrivingTestController extends Controller
                 'Le candidat selectionné n est plus éligible pour un test de conduite.',
                 'L\'utilisateur selectionné n\'est pas un examinateur valide.',
                 'Le véhicule sélectionné n\'est pas disponible.',
-                'Conflit d horaire: Le véhicule ou l examinateur est déjà réservé à cette date/heure.',
+                'Conflit d\'horaire: Le véhicule ou l\'examinateur est déjà réservé à cette date/heure.',
                 'Le candidat a déjà un test de conduite planifié.'
             ];
             if (in_array($e->getMessage(), $knownMessages)) {
@@ -174,7 +173,7 @@ class DrivingTestController extends Controller
                 $query->where('vehicle_id', $validatedData['vehicle_id'])
                     ->orWhere('interviewer_id', $validatedData['interviewer_id']);
                 })
-                ->exists();
+                ->exists(); // Fix: Removed an extra ->exists();
             if ($conflictingTest) {
                 throw new \Exception('Conflit d\'horaire: Le véhicule ou l\'examinateur est déjà reservé à cette date/heure pour un autre test.');
             }
