@@ -120,11 +120,19 @@
                                             {{ $candidate->years_of_experience }} {{ Str::plural('an', $candidate->years_of_experience) }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                {{ $candidate->status === 'hired' ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 
-                                                   ($candidate->status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' : 
-                                                   'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100') }}">
-                                                {{ ucfirst($candidate->status) }}
+                                            @php
+                                                $statusClass = match ($candidate->status) {
+                                                    \App\Models\Candidate::STATUS_EMBAUCHE => 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100',
+                                                    \App\Models\Candidate::STATUS_REFUSE => 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100',
+                                                    \App\Models\Candidate::STATUS_OFFRE => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100',
+                                                    \App\Models\Candidate::STATUS_TEST => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-100',
+                                                    \App\Models\Candidate::STATUS_ENTRETIEN => 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100',
+                                                    \App\Models\Candidate::STATUS_CONTACTE => 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100',
+                                                    default => 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100', // STATUS_NOUVEAU
+                                                };
+                                            @endphp
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusClass }}">
+                                                {{ \App\Models\Candidate::$statuses[$candidate->status] ?? 'Inconnu' }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">

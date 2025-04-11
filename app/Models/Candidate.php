@@ -39,7 +39,6 @@ class Candidate extends Model
     const STATUS_OFFRE = 'offre';
     const STATUS_EMBAUCHE = 'embauche';
     const STATUS_REFUSE = 'refuse';
-    const STATUS_EN_COURS = 'en cours';
 
     // Liste des statuts possibles
     public static $statuses = [
@@ -50,7 +49,6 @@ class Candidate extends Model
         self::STATUS_OFFRE => 'Offre',
         self::STATUS_EMBAUCHE => 'Embauché',
         self::STATUS_REFUSE => 'Refusé',
-        self::STATUS_EN_COURS => 'En Cours'
     ];
 
     /**

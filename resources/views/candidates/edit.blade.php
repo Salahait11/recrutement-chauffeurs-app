@@ -95,6 +95,24 @@
                                 <textarea name="notes" id="notes" rows="3" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600">{{ old('notes', $candidate->notes) }}</textarea>
                             </div>
 
+                            {{-- Statut --}}
+                            <div>
+                                <label for="status" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Status') }}</label>
+                                <select name="status" id="status" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" required>
+                                    <option value="">-- Sélectionner un statut --</option>
+                                    @foreach($statuses as $statusValue => $statusLabel)
+                                        <option value="{{ $statusValue }}" {{ old('status', $candidate->status) == $statusValue ? 'selected' : '' }}>
+                                            {{ $statusLabel }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Années d\'expérience --}}
+                            <div>
+                                <label for="years_of_experience" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Années d\'expérience') }}</label>
+                                <input type="number" name="years_of_experience" id="years_of_experience" min="0" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" value="{{ old('years_of_experience', $candidate->years_of_experience) }}" required>
+                            </div>
                         </div>
 
                         {{-- Boutons Annuler et Mettre à Jour --}}
