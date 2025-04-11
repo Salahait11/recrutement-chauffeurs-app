@@ -70,7 +70,7 @@
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                 @if($candidate->status === \App\Models\Candidate::STATUS_EMBAUCHE)
                                     bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
-                                @elseif($candidate->status === Candidate::STATUS_REFUSE)
+                                @elseif($candidate->status === \App\Models\Candidate::STATUS_REFUSE)
                                     bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100
                                 @else
                                     bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100
@@ -81,10 +81,10 @@
                             
                             <form method="POST" action="{{ route('candidates.update', $candidate->id) }}">
                                 @csrf
-                                @method('PUT') 
+                                @method('PUT')
                                 <select name="status" onchange="this.form.submit()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                                     <option disabled>{{ __('Changer le statut') }}</option>
-                                    @foreach(Candidate::$statuses as $value => $label)
+                                    @foreach($statuses as $value => $label)
                                         <option value="{{ $value }}" {{ $candidate->status === $value ? 'selected' : '' }}>{{ $label }}</option>
                                     @endforeach
                                 </select>
