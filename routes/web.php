@@ -12,7 +12,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\DashboardController; // Ajoute cette ligne
+use App\Http\Controllers\DashboardController; 
 use App\Http\Controllers\AbsenceController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\VehicleController;
@@ -22,11 +22,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index']) // Appelle la méthode index
-      ->middleware(['auth', 'verified'])
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index']) 
       ->name('dashboard');
 
-Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -48,9 +47,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('evaluations', EvaluationController::class);
 
     // Offres
-    Route::get('/candidates/{candidate}/offers/create', [OfferController::class, 'createForCandidate'])->name('candidates.offers.create');
+    Route::resource('offers', OfferController::class);
+    Route::get('/offers/create/candidate/{candidate}', [OfferController::class, 'createForCandidate'])
+        ->name('offers.create-for-candidate');
+    Route::post('/offers/{offer}/update-status', [OfferController::class, 'updateStatus'])
+        ->name('offers.update-status');
     Route::get('/offers/{offer}/pdf', [OfferController::class, 'downloadOfferPdf'])->name('offers.pdf');
-    Route::resource('offers', OfferController::class)->except(['create']);
 
     Route::get('/employees/{employee}/pdf', [EmployeeController::class, 'downloadEmployeePdf'])->name('employees.pdf');
     Route::resource('employees', EmployeeController::class);

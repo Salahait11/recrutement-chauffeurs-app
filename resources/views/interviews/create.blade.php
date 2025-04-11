@@ -65,8 +65,15 @@
 
                             {{-- Type d'entretien --}}
                             <div>
-                                <label for="type" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Type d\'entretien') }}</label>
-                                <input type="text" name="type" id="type" placeholder="Ex: Téléphonique, RH, Technique..." class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" value="{{ old('type') }}">
+                                <label for="type" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Type d\'entretien') }} <span class="text-red-500">*</span></label>
+                                <select name="type" id="type" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" required>
+                                    <option value="">-- Sélectionner un type d'entretien --</option>
+                                    @foreach($types as $type)
+                                        <option value="{{ $type }}" {{ old('type') == $type ? 'selected' : '' }}>
+                                            {{ ucfirst($type) }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
 
                             {{-- Lieu / Lien Visio --}}

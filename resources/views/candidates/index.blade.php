@@ -21,9 +21,9 @@
                         <div class="relative flex-grow">
                             <input type="text" name="search" placeholder="Rechercher nom, email..."
                                    class="block w-full sm:w-56 rounded-md border-gray-300 shadow-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm pe-10"
-                                   value="{{ $search ?? '' }}">
+                                   value="{{ request('search') ?? '' }}">
                             <span class="absolute inset-y-0 end-0 flex items-center pe-3 text-gray-400 pointer-events-none"><svg class="h-5 w-5">...</svg></span> {{-- Loupe --}}
-                            @if($search)
+                            @if(request('search'))
                                 {{-- Lien pour effacer SEULEMENT la recherche (garde le statut) --}}
                                 <a href="{{ route('candidates.index', ['status' => request('status')]) }}" class="absolute inset-y-0 end-10 flex items-center pe-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer" title="Effacer la recherche">
                                      <svg class="h-4 w-4">...</svg> {{-- Croix --}}
@@ -41,15 +41,15 @@
                 <div class="w-full sm:w-auto">
                     <form method="GET" action="{{ route('candidates.index') }}" id="statusFilterForm">
                         {{-- Champ caché pour garder la recherche lors du filtrage par statut --}}
-                        @if($search)<input type="hidden" name="search" value="{{ $search }}">@endif
+                        @if(request('search'))<input type="hidden" name="search" value="{{ request('search') }}">@endif
 
                         <label for="status_filter" class="sr-only">Filtrer par Statut</label>
                         <select name="status" id="status_filter" onchange="this.form.submit();" {{-- Soumet au changement --}}
                                 class="block w-full sm:w-48 rounded-md border-gray-300 shadow-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm">
-                            <option value="all" {{ !$statusFilter || $statusFilter == 'all' ? 'selected' : '' }}>-- Tous les Statuts --</option>
+                            <option value="all" {{ !request('status') || request('status') == 'all' ? 'selected' : '' }}>-- Tous les Statuts --</option>
                             {{-- $statuses doit être passé par le contrôleur --}}
                             @foreach($statuses ?? [] as $status)
-                                <option value="{{ $status }}" {{ $statusFilter == $status ? 'selected' : '' }}>
+                                <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>
                                     {{ ucfirst($status) }}
                                 </option>
                             @endforeach
@@ -58,7 +58,7 @@
                 </div>
 
                 {{-- Bouton Réinitialiser TOUS les filtres --}}
-                @if($search || ($statusFilter && $statusFilter != 'all'))
+                @if(request('search') || (request('status') && request('status') != 'all'))
                     <div class="w-full sm:w-auto">
                         <a href="{{ route('candidates.index') }}" class="inline-flex items-center px-4 py-2 text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition">
                             Réinitialiser Tout
@@ -99,20 +99,31 @@
                                     <th scope="col" class="px-6 py-3">Nom</th>
                                     <th scope="col" class="px-6 py-3">Email</th>
                                     <th scope="col" class="px-6 py-3">Téléphone</th>
+                                    <th scope="col" class="px-6 py-3">Expérience</th>
                                     <th scope="col" class="px-6 py-3">Statut</th>
-                                    <th scope="col" class="px-6 py-3"><span class="sr-only">Actions</span></th>
+                                    <th scope="col" class="px-6 py-3">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($candidates as $candidate)
                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                            {{ $candidate->first_name }} {{ $candidate->last_name }}
-                                        </th>
-                                        <td class="px-6 py-4">{{ $candidate->email }}</td>
-                                        <td class="px-6 py-4">{{ $candidate->phone }}</td>
                                         <td class="px-6 py-4">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $candidate->status === 'hired' ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : ($candidate->status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' : 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100') }}">
+                                            {{ $candidate->first_name }} {{ $candidate->last_name }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            {{ $candidate->email }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            {{ $candidate->phone }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            {{ $candidate->years_of_experience }} {{ Str::plural('an', $candidate->years_of_experience) }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                {{ $candidate->status === 'hired' ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 
+                                                   ($candidate->status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' : 
+                                                   'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100') }}">
                                                 {{ ucfirst($candidate->status) }}
                                             </span>
                                         </td>
@@ -127,9 +138,9 @@
                                     </tr>
                                 @empty
                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                        <td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                                            @if($search)
-                                                Aucun candidat trouvé pour la recherche "{{ $search }}".
+                                        <td colspan="6" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                            @if(request('search'))
+                                                Aucun candidat trouvé pour la recherche "{{ request('search') }}".
                                             @else
                                                 Aucun candidat trouvé.
                                             @endif

@@ -53,36 +53,41 @@
                                 <input type="tel" name="phone" id="phone" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" value="{{ old('phone') }}" required>
                             </div>
 
+                            {{-- Années d'expérience --}}
+                            <div>
+                                <label for="years_of_experience" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Années d\'expérience') }}</label>
+                                <input type="number" name="years_of_experience" id="years_of_experience" min="0" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" value="{{ old('years_of_experience') }}" required>
+                            </div>
+
                             {{-- Adresse (champ texte multiligne) --}}
                             <div class="md:col-span-2">
                                 <label for="address" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Adresse') }}</label>
-                                <textarea name="address" id="address" rows="3" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600">{{ old('address') }}</textarea>
+                                <textarea name="address" id="address" rows="3" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" required>{{ old('address') }}</textarea>
                             </div>
 
-                             {{-- Date de Naissance --}}
+                            {{-- Date de Naissance --}}
                             <div>
                                 <label for="birth_date" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Date de Naissance') }}</label>
-                                <input type="date" name="birth_date" id="birth_date" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" value="{{ old('birth_date') }}">
+                                <input type="date" name="birth_date" id="birth_date" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" value="{{ old('birth_date') }}" required>
                             </div>
 
                             {{-- Numéro Permis --}}
-                             <div>
+                            <div>
                                 <label for="driving_license_number" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Numéro Permis de Conduire') }}</label>
-                                <input type="text" name="driving_license_number" id="driving_license_number" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" value="{{ old('driving_license_number') }}">
+                                <input type="text" name="driving_license_number" id="driving_license_number" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" value="{{ old('driving_license_number') }}" required>
                             </div>
 
                             {{-- Expiration Permis --}}
                             <div>
                                 <label for="driving_license_expiry" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Date Expiration Permis') }}</label>
-                                <input type="date" name="driving_license_expiry" id="driving_license_expiry" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" value="{{ old('driving_license_expiry') }}">
+                                <input type="date" name="driving_license_expiry" id="driving_license_expiry" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" value="{{ old('driving_license_expiry') }}" required>
                             </div>
 
-                             {{-- Notes (champ texte multiligne) --}}
+                            {{-- Notes (champ texte multiligne) --}}
                             <div class="md:col-span-2">
                                 <label for="notes" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Notes') }}</label>
                                 <textarea name="notes" id="notes" rows="3" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600">{{ old('notes') }}</textarea>
                             </div>
-
                         </div>
 
                         {{-- Bouton Soumettre --}}
@@ -96,7 +101,6 @@
                             </button>
                         </div>
                     </form>
-
                 </div>
             </div>
         </div>

@@ -61,6 +61,9 @@
                         <div class="md:col-span-1 font-semibold">{{ __('Expiration Permis') }}</div>
                         <div class="md:col-span-2">{{ $candidate->driving_license_expiry ? \Carbon\Carbon::parse($candidate->driving_license_expiry)->format('d/m/Y') : 'Non renseignée' }}</div>
 
+                        <div class="md:col-span-1 font-semibold">{{ __('Années d\'expérience') }}</div>
+                        <div class="md:col-span-2">{{ $candidate->years_of_experience }} {{ Str::plural('an', $candidate->years_of_experience) }}</div>
+
                         <div class="md:col-span-1 font-semibold">{{ __('Statut') }}</div>
                         <div class="md:col-span-2">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $candidate->status === 'hired' ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : ($candidate->status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' : 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100') }}">
@@ -85,7 +88,7 @@
                     <div class="flex justify-between items-center mt-6">
                         {{-- Bouton Créer Offre --}}
                         <div>
-                            <a href="{{ route('candidates.offers.create', $candidate->id) }}" class="inline-flex items-center px-4 py-2 bg-teal-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-teal-500 active:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                            <a href="{{ route('offers.create-for-candidate', $candidate) }}" class="inline-flex items-center px-4 py-2 bg-teal-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-teal-500 active:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
                                 {{ __('Créer une Offre') }}
                             </a>
                             {{-- Autres boutons d'action rapide possibles ici --}}

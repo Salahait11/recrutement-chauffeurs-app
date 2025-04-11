@@ -11,6 +11,40 @@ class Interview extends Model
 {
     use HasFactory;
 
+    // Constantes pour les statuts d'entretien
+    const STATUS_PLANIFIE = 'planifié';
+    const STATUS_TERMINE = 'terminé';
+    const STATUS_ANNULE = 'annulé';
+
+    // Constantes pour les types d'entretien
+    const TYPE_INITIAL = 'initial';
+    const TYPE_TECHNIQUE = 'technique';
+    const TYPE_FINAL = 'final';
+
+    /**
+     * Liste des statuts disponibles
+     */
+    public static function getStatuses(): array
+    {
+        return [
+            self::STATUS_PLANIFIE,
+            self::STATUS_TERMINE,
+            self::STATUS_ANNULE,
+        ];
+    }
+
+    /**
+     * Liste des types d'entretien disponibles
+     */
+    public static function getTypes(): array
+    {
+        return [
+            self::TYPE_INITIAL,
+            self::TYPE_TECHNIQUE,
+            self::TYPE_FINAL,
+        ];
+    }
+
     protected $fillable = [
         'candidate_id',
         'scheduler_id',
