@@ -30,16 +30,14 @@ class DrivingTestController extends Controller
 
     public function create()
     {
-        $candidates = Candidate::where('status', Candidate::STATUS_EN_COURS)
+        $candidates = Candidate::where('status', Candidate::STATUS_TEST)
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();
 
-        $evaluators = Employee::all();
+        $vehicles = \App\Models\Vehicle::all(); // Récupérer tous les véhicules
 
-        $vehicles = DrivingTest::getVehicleTypes();
-
-        return view('driving-tests.create', compact('candidates', 'evaluators', 'vehicles'));
+        return view('driving-tests.create', compact('candidates', 'vehicles'));
     }
 
     public function store(Request $request)
@@ -57,7 +55,7 @@ class DrivingTestController extends Controller
             // Vérifier si le candidat peut passer un test
             $candidate = Candidate::findOrFail($validatedData['candidate_id']);
             
-            if ($candidate->status !== Candidate::STATUS_EN_COURS) {
+            if ($candidate->status !== Candidate::STATUS_TEST) {
                 throw new \Exception('Le candidat doit être en cours de recrutement pour passer un test de conduite.');
             }
 
@@ -139,7 +137,7 @@ class DrivingTestController extends Controller
     public function updateStatus(Request $request, DrivingTest $drivingTest)
     {
         $validatedData = $request->validate([
-            'status' => 'required|in:' . implode(',', [
+            'status' => ['required', 'in:' . implode(',', [
                 DrivingTest::STATUS_PASSED,
                 DrivingTest::STATUS_FAILED,
                 DrivingTest::STATUS_CANCELED,
@@ -169,7 +167,7 @@ class DrivingTestController extends Controller
             return redirect()->route('driving-tests.show', $drivingTest)
                 ->with('success', 'Statut du test de conduite mis à jour avec succès.');
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Erreur mise à jour statut test de conduite: " . $e->getMessage());
             return back()->with('error', $e->getMessage());

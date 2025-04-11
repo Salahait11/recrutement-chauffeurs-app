@@ -15,34 +15,21 @@ class DrivingTest extends Model
         'candidate_id',
         'evaluator_id',
         'vehicle_id',
+        'notes',
         'test_date',
-        'route_details',
         'status',
-        'passed',
-        'results_summary',
+        'feedback',
     ];
 
-    const STATUS_SCHEDULED = 'planifie';
-    const STATUS_PASSED = 'reussi';
-    const STATUS_FAILED = 'echoue';
-    const STATUS_CANCELED = 'annule';
+    const STATUS_SCHEDULED = 'planifié';
+    const STATUS_PASSED = 'réussi';
+    const STATUS_FAILED = 'échoué';
+    const STATUS_CANCELED = 'annulé';
 
     protected $casts = [
         'test_date' => 'datetime',
-        'passed' => 'boolean',
     ];
 
     public function candidate(): BelongsTo { return $this->belongsTo(Candidate::class); }
-    public function evaluator(): BelongsTo { return $this->belongsTo(User::class, 'evaluator_id'); }
     public function vehicle(): BelongsTo { return $this->belongsTo(Vehicle::class); }
-
-       public static function getVehicleTypes(): array
-       {
-           return [
-               'Voiture',
-               'Camion',
-               'Moto',
-           ];
-       }
-
 }

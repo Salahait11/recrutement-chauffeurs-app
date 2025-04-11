@@ -42,27 +42,15 @@
                                 </select>
                             </div>
 
-                            {{-- Évaluateur --}}
-                            <div>
-                                <label for="evaluator_id" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Évaluateur') }} <span class="text-red-500">*</span></label>
-                                <select name="evaluator_id" id="evaluator_id" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" required>
-                                    <option value="">-- Sélectionner un évaluateur --</option>
-                                    @foreach($evaluators as $evaluator)
-                                        <option value="{{ $evaluator->id }}" {{ old('evaluator_id') == $evaluator->id ? 'selected' : '' }}>
-                                            {{ $evaluator->first_name }} {{ $evaluator->last_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
                              {{-- Véhicule --}}
                             <div>
-                                <label for="vehicle_type" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Type de Véhicule') }} <span class="text-red-500">*</span></label>
-                                <select name="vehicle_type" id="vehicle_type" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" required>
-                                    <option value="">-- Sélectionner un type de véhicule --</option>
-                                    @foreach($vehicles as $vehicle)
-                                        <option value="{{ $vehicle }}" {{ old('vehicle_type') == $vehicle ? 'selected' : '' }}>{{ $vehicle }}</option>
-                                        </option>
+                                 <label for="vehicle_id" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Véhicule') }} <span class="text-red-500">*</span></label>
+                                 <select name="vehicle_id" id="vehicle_id" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" required>
+                                     <option value="">-- Sélectionner un véhicule --</option>
+                                     @foreach($vehicles as $vehicle)
+                                         <option value="{{ $vehicle->id }}" {{ old('vehicle_id') == $vehicle->id ? 'selected' : '' }}>
+                                             {{ $vehicle->make }} {{ $vehicle->model }} ({{ $vehicle->license_plate }})
+                                         </option>
                                     @endforeach
                                 </select>
                             </div>
