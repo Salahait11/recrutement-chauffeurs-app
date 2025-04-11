@@ -39,7 +39,7 @@ class OfferController extends Controller
         $offers = $query->latest()->paginate(10);
         
         // Récupérer les candidats pour le filtre (seulement ceux qui sont en cours)
-        $candidates = Candidate::where('status', Candidate::STATUS_EN_COURS)
+        $candidates = Candidate::where('status', Candidate::STATUS_TEST)
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();
@@ -64,7 +64,7 @@ class OfferController extends Controller
         }
 
         // Vérifier si le candidat est en cours
-        if ($candidate->status !== Candidate::STATUS_EN_COURS) {
+        if ($candidate->status !== Candidate::STATUS_TEST) {
             return redirect()->route('candidates.show', $candidate)
                 ->with('error', 'Le candidat doit être en cours de recrutement pour recevoir une offre.');
         }
@@ -98,7 +98,7 @@ class OfferController extends Controller
 
             // Vérifier si le candidat existe et est en cours
             $candidate = Candidate::findOrFail($validatedData['candidate_id']);
-            if ($candidate->status !== Candidate::STATUS_EN_COURS) {
+            if ($candidate->status !== Candidate::STATUS_TEST) {
                 throw new \Exception('Le candidat doit être en cours de recrutement pour recevoir une offre.');
             }
 
