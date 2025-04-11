@@ -90,7 +90,8 @@ class CandidateController extends Controller
     public function show(Candidate $candidate)
     {
         $candidate->load(['interviews', 'drivingTests', 'offers', 'documents']);
-        return view('candidates.show', compact('candidate'));
+        $statuses = Candidate::$statuses;
+        return view('candidates.show', compact('candidate', 'statuses'));
     }
 
     public function edit(Candidate $candidate)
