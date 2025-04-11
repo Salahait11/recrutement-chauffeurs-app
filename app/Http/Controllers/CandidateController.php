@@ -96,7 +96,8 @@ class CandidateController extends Controller
 
     public function edit(Candidate $candidate)
     {
-        return view('candidates.edit', compact('candidate'));
+        $statuses = Candidate::$statuses;
+        return view('candidates.edit', compact('candidate','statuses'));
     }
 
     public function update(Request $request, Candidate $candidate)
