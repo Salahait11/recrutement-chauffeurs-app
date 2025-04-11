@@ -15,6 +15,9 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    private const UPCOMING_DAYS = 7;
+    private const LICENSE_EXPIRY_THRESHOLD = 60;
+
     /**
      * Affiche le tableau de bord principal.
      */
@@ -53,22 +56,22 @@ class DashboardController extends Controller
 
             // Entretiens à venir (7 prochains jours)
             $viewData['upcomingInterviews'] = Interview::with('candidate')
-                ->whereBetween('interview_date', [now(), now()->addDays(7)])
+                ->whereBetween('interview_date', [now(), now()->addDays(self::UPCOMING_DAYS)])
                 ->orderBy('interview_date')
                 ->limit(5)
                 ->get();
 
             // Tests de conduite à venir (7 prochains jours)
             $viewData['upcomingDrivingTests'] = DrivingTest::with(['candidate', 'vehicle'])
-                ->whereBetween('test_date', [now(), now()->addDays(7)])
+                ->whereBetween('test_date', [now(), now()->addDays(self::UPCOMING_DAYS)])
                 ->orderBy('test_date')
                 ->limit(5)
                 ->get();
 
             // Permis expirant bientôt (60 jours)
             $expirationThreshold = now()->addDays(60);
-            $viewData['expiringLicensesCandidates'] = Candidate::whereNotIn('status', ['hired', 'rejected'])
-                ->whereNotNull('driving_license_expiry')
+            $viewData['expiringLicensesCandidates'] = Candidate::whereNotIn('status', ['hired', 'rejected'])                
+                ->whereNotNull('driving_license_expiry')                
                 ->whereDate('driving_license_expiry', '>=', now())
                 ->whereDate('driving_license_expiry', '<=', $expirationThreshold)
                 ->orderBy('driving_license_expiry')
