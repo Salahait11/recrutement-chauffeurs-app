@@ -65,10 +65,11 @@
                                 <label for="vehicle_id" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Véhicule Utilisé') }}</label>
                                 <select name="vehicle_id" id="vehicle_id" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600">
                                     <option value="">-- Sélectionner un véhicule (optionnel) --</option>
-                                    @foreach($vehicles as $vehicleType)
-                                        <option value="{{ $vehicleType }}" {{ old('vehicle_type', $drivingTest->vehicle_type) == $vehicleType ? 'selected' : '' }}>{{ $vehicleType }}</option>
+                                    @foreach($vehicles as $vehicle)
+                                        <option value="{{ $vehicle->id }}" {{ old('vehicle_id', $drivingTest->vehicle_id) == $vehicle->id ? 'selected' : '' }}>
+                                            {{ $vehicle->type }} (ID: {{ $vehicle->id }})
+                                        </option>
                                     @endforeach
-
                                 </select>
                             </div>
 
