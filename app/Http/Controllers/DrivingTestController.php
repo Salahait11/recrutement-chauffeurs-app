@@ -137,11 +137,11 @@ class DrivingTestController extends Controller
     public function updateStatus(Request $request, DrivingTest $drivingTest)
     {
         $validatedData = $request->validate([
-            'status' => ['required', 'in:' . implode(',', (
+            'status' => ['required', 'in:' . implode(',', [
                 DrivingTest::STATUS_PASSED,
                 DrivingTest::STATUS_FAILED,
                 DrivingTest::STATUS_CANCELED,
-            ))],
+            ])],
             'feedback' => 'nullable|string'
         ]);
 
