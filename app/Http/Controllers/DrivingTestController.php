@@ -82,20 +82,20 @@ class DrivingTestController extends Controller
             // Ensure candidate status allows testing (adjust array if needed)
             if (!in_array($candidate->status, [Candidate::STATUS_TEST])) {
                  // FIXED: Escaped quote
-                 throw new \Exception('Le candidat sélectionné n'est plus éligible pour un test de conduite.');
+                 throw new \Exception('Le candidat sélectionné n est plus éligible pour un test de conduite.');
             }
 
             $interviewer = User::findOrFail($validatedData['interviewer_id']);
             // Ensure interviewer has the correct role (adjust role name if needed)
             if (!$interviewer->hasRole('Admin')) {
                  // FIXED: Escaped quote
-                 throw new \Exception('L'utilisateur sélectionné n'est pas un examinateur valide.');
+                 throw new \Exception('L utilisateur sélectionné n est pas un examinateur valide.');
             }
 
             $vehicle = Vehicle::findOrFail($validatedData['vehicle_id']);
             if ($vehicle->status !== 'available') { // Ensure vehicle is available
                  // FIXED: Escaped quote
-                 throw new \Exception('Le véhicule sélectionné n'est pas disponible.');
+                 throw new \Exception('Le véhicule sélectionné n est pas disponible.');
             }
 
             // Check if candidate already has a test scheduled
@@ -116,7 +116,7 @@ class DrivingTestController extends Controller
                 ->exists();
             if ($conflictingTest) {
                  // FIXED: Escaped quotes
-                 throw new \Exception('Conflit d'horaire: Le véhicule ou l'examinateur est déjà réservé à cette date/heure.');
+                 throw new \Exception('Conflit d horaire: Le véhicule ou l examinateur est déjà réservé à cette date/heure.');
             }
 
             $test = DrivingTest::create([
@@ -140,11 +140,11 @@ class DrivingTestController extends Controller
             // Prepare user-friendly error message (using the escaped messages)
             $errorMessage = 'Erreur lors de la planification du test de conduite.';
              $knownMessages = [
-                'Le candidat sélectionné n'est plus éligible pour un test de conduite.',
-                'L'utilisateur sélectionné n'est pas un examinateur valide.',
-                'Le véhicule sélectionné n'est pas disponible.',
+                'Le candidat sélectionné n est plus éligible pour un test de conduite.',
+                'L utilisateur sélectionné n est pas un examinateur valide.',
+                'Le véhicule sélectionné n est pas disponible.',
                 'Le candidat a déjà un test de conduite planifié.',
-                'Conflit d'horaire: Le véhicule ou l'examinateur est déjà réservé à cette date/heure.'
+                'Conflit d horaire: Le véhicule ou l examinateur est déjà réservé à cette date/heure.'
              ];
             if (in_array($e->getMessage(), $knownMessages)) {
                  $errorMessage = $e->getMessage(); // Pass the already escaped message
@@ -202,13 +202,13 @@ class DrivingTestController extends Controller
              $interviewer = User::findOrFail($validatedData['interviewer_id']);
              if (!$interviewer->hasRole('Admin')) {
                  // FIXED: Escaped quote
-                 throw new \Exception('L'examinateur sélectionné n'est plus valide.');
+                 throw new \Exception('L examinateur sélectionné n est plus valide.');
              }
              $vehicle = Vehicle::findOrFail($validatedData['vehicle_id']);
              // Re-check availability if necessary, especially if it could change
              if ($vehicle->status !== 'available') {
                   // FIXED: Escaped quote
-                  throw new \Exception('Le véhicule sélectionné n'est plus disponible.');
+                  throw new \Exception('Le véhicule sélectionné n est plus disponible.');
              }
 
              // Check for conflicts, excluding the current test
@@ -222,7 +222,7 @@ class DrivingTestController extends Controller
                  ->exists();
              if ($conflictingTest) {
                   // FIXED: Escaped quotes
-                  throw new \Exception('Conflit d'horaire: Le véhicule ou l'examinateur est déjà réservé à cette date/heure pour un autre test.');
+                  throw new \Exception('Conflit d horaire: Le véhicule ou l examinateur est déjà réservé à cette date/heure pour un autre test.');
              }
 
              $drivingTest->update($validatedData);
@@ -238,9 +238,9 @@ class DrivingTestController extends Controller
 
              $errorMessage = 'Erreur lors de la mise à jour du test de conduite.';
               $knownMessages = [
-                 'L'examinateur sélectionné n'est plus valide.',
-                 'Le véhicule sélectionné n'est plus disponible.',
-                 'Conflit d'horaire: Le véhicule ou l'examinateur est déjà réservé à cette date/heure pour un autre test.'
+                 'L examinateur sélectionné n est plus valide.',
+                 'Le véhicule sélectionné n est plus disponible.',
+                 'Conflit d horaire: Le véhicule ou l examinateur est déjà réservé à cette date/heure pour un autre test.'
               ];
              if (in_array($e->getMessage(), $knownMessages)) {
                  $errorMessage = $e->getMessage(); // Pass escaped message
