@@ -75,7 +75,7 @@ class CandidateController extends Controller
 
             DB::commit();
 
-            return redirect()->route('candidates.show', $candidate)
+            return redirect()->route('candidates.index')
                 ->with('success', 'Candidat créé avec succès.');
 
         } catch (\Exception $e) {
