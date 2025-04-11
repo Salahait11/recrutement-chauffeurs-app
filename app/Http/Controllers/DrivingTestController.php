@@ -37,7 +37,7 @@ class DrivingTestController extends Controller
             ->orderBy('first_name')
             ->get();
 
-        $vehicles = Vehicle::where('availability', 'available')
+        $vehicles = Vehicle::where('is_available', true)
                             ->orderBy('make')
                             ->orderBy('model')
                             ->get();
