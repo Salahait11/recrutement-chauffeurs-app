@@ -1,6 +1,5 @@
 {{-- resources/views/candidates/show.blade.php --}}
 <x-app-layout>
-    @php use App\Models\Candidate; @endphp
 
     <x-slot name="header">
         <div class="flex justify-between items-center">
