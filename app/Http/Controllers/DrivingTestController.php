@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DrivingTest;
 use App\Models\Candidate;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -27,15 +28,17 @@ class DrivingTestController extends Controller
         return view('driving-tests.index', compact('drivingTests'));
     }
 
-    public function create()
-    {
-        $candidates = Candidate::where('status', Candidate::STATUS_EN_COURS)
-            ->orderBy('last_name')
-            ->orderBy('first_name')
-            ->get();
+   public function create()
+   {
+       $candidates = Candidate::where('status', Candidate::STATUS_EN_COURS)
+           ->orderBy('last_name')
+           ->orderBy('first_name')
+           ->get();
 
-        return view('driving-tests.create', compact('candidates'));
-    }
+       $evaluators = Employee::all();
+
+       return view('driving-tests.create', compact('candidates', 'evaluators'));
+   }
 
     public function store(Request $request)
     {
