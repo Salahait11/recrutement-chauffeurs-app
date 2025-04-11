@@ -68,7 +68,7 @@
 
                         <div class="md:col-span-1 font-semibold">{{ __('Statut') }}</div>
                         <div class="md:col-span-2 flex items-center space-x-4">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                 @if($candidate->status === Candidate::STATUS_EMBAUCHE)
                                     bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
                                 @elseif($candidate->status === Candidate::STATUS_REFUSE)
