@@ -76,7 +76,7 @@ class DrivingTestController extends Controller
                 'test_date' => $validatedData['test_date'],
                 'vehicle_type' => $validatedData['vehicle_type'],
                 'notes' => $validatedData['notes'],
-                'status' => 'planifie'
+                'status' => DrivingTest::STATUS_SCHEDULED
             ]);
 
             DB::commit();
@@ -101,7 +101,7 @@ class DrivingTestController extends Controller
 
     public function edit(DrivingTest $drivingTest)
     {
-        if ($drivingTest->status !== 'planifie') {
+        if ($drivingTest->status !== DrivingTest::STATUS_SCHEDULED) {
             return redirect()->route('driving-tests.show', $drivingTest)
                 ->with('error', 'Seuls les tests planifiés peuvent être modifiés.');
         }
@@ -111,7 +111,7 @@ class DrivingTestController extends Controller
 
     public function update(Request $request, DrivingTest $drivingTest)
     {
-        if ($drivingTest->status !== 'planifie') {
+        if ($drivingTest->status !== DrivingTest::STATUS_SCHEDULED) {
             return redirect()->route('driving-tests.show', $drivingTest)
                 ->with('error', 'Seuls les tests planifiés peuvent être modifiés.');
         }
@@ -139,14 +139,18 @@ class DrivingTestController extends Controller
     public function updateStatus(Request $request, DrivingTest $drivingTest)
     {
         $validatedData = $request->validate([
-            'status' => 'required|in:reussi,echoue,annule',
+            'status' => 'required|in:' . implode(',', [
+                DrivingTest::STATUS_PASSED,
+                DrivingTest::STATUS_FAILED,
+                DrivingTest::STATUS_CANCELED,
+            ]),
             'feedback' => 'nullable|string'
         ]);
 
         try {
             DB::beginTransaction();
 
-            if ($drivingTest->status !== 'planifie') {
+            if ($drivingTest->status !== DrivingTest::STATUS_SCHEDULED) {
                 throw new \Exception('Seuls les tests planifiés peuvent être complétés ou annulés.');
             }
 
@@ -156,7 +160,7 @@ class DrivingTestController extends Controller
             ]);
 
             // Si le test est échoué, mettre à jour le statut du candidat à "refusé"
-            if ($validatedData['status'] === 'echoue') {
+            if ($validatedData['status'] === DrivingTest::STATUS_FAILED) {
                 $drivingTest->candidate->update(['status' => Candidate::STATUS_REFUSE]);
             }
 
@@ -165,7 +169,7 @@ class DrivingTestController extends Controller
             return redirect()->route('driving-tests.show', $drivingTest)
                 ->with('success', 'Statut du test de conduite mis à jour avec succès.');
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::error("Erreur mise à jour statut test de conduite: " . $e->getMessage());
             return back()->with('error', $e->getMessage());
@@ -174,7 +178,7 @@ class DrivingTestController extends Controller
 
     public function destroy(DrivingTest $drivingTest)
     {
-        if ($drivingTest->status !== 'planifie') {
+        if ($drivingTest->status !== DrivingTest::STATUS_SCHEDULED) {
             return back()->with('error', 'Seuls les tests planifiés peuvent être supprimés.');
         }
 

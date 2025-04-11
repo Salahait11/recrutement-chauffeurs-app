@@ -28,10 +28,10 @@
                         <label for="status" class="block font-medium text-xs text-gray-700 dark:text-gray-300">Statut</label>
                         <select name="status" id="status" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-xs">
                             <option value="">Tous les statuts</option>
-                            <option value="planifié" {{ request('status') === 'planifié' ? 'selected' : '' }}>Planifié</option>
-                            <option value="réussi" {{ request('status') === 'réussi' ? 'selected' : '' }}>Réussi</option>
-                            <option value="échoué" {{ request('status') === 'échoué' ? 'selected' : '' }}>Échoué</option>
-                            <option value="annulé" {{ request('status') === 'annulé' ? 'selected' : '' }}>Annulé</option>
+                            <option value="{{ App\Models\DrivingTest::STATUS_SCHEDULED }}" {{ request('status') === App\Models\DrivingTest::STATUS_SCHEDULED ? 'selected' : '' }}>Planifié</option>
+                            <option value="{{ App\Models\DrivingTest::STATUS_PASSED }}" {{ request('status') === App\Models\DrivingTest::STATUS_PASSED ? 'selected' : '' }}>Réussi</option>
+                            <option value="{{ App\Models\DrivingTest::STATUS_FAILED }}" {{ request('status') === App\Models\DrivingTest::STATUS_FAILED ? 'selected' : '' }}>Échoué</option>
+                            <option value="{{ App\Models\DrivingTest::STATUS_CANCELED }}" {{ request('status') === App\Models\DrivingTest::STATUS_CANCELED ? 'selected' : '' }}>Annulé</option>
                         </select>
                     </div>
 
@@ -76,13 +76,13 @@
                                             {{ $test->test_date->format('d/m/Y H:i') }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $test->vehicle->name ?? 'Non assigné' }}
+                                            {{ $test->vehicle_type ?? 'Non spécifié' }}
                                         </td>
                                         <td class="px-6 py-4">
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                {{ $test->status === 'planifié' ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' : 
-                                                   ($test->status === 'réussi' ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 
-                                                   ($test->status === 'échoué' ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' : 
+                                                {{ $test->status === App\Models\DrivingTest::STATUS_SCHEDULED ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' : 
+                                                   ($test->status === App\Models\DrivingTest::STATUS_PASSED ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 
+                                                   ($test->status === App\Models\DrivingTest::STATUS_FAILED ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' : 
                                                    'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100')) }}">
                                                 {{ ucfirst($test->status) }}
                                             </span>

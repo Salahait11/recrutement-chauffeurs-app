@@ -50,13 +50,14 @@
                         <div class="md:col-span-2">{{ $drivingTest->test_date->format('d/m/Y H:i') }}</div>
 
                         <div class="md:col-span-1 font-semibold">{{ __('Véhicule') }}</div>
-                        <div class="md:col-span-2">{{ $drivingTest->vehicle ? ($drivingTest->vehicle->brand.' '.$drivingTest->vehicle->model.' ('.$drivingTest->vehicle->plate_number.')') : 'N/A' }}</div>
+                        <div class="md:col-span-2">{{ $drivingTest->vehicle_type ?? 'Non spécifié' }}</div>
 
                         <div class="md:col-span-1 font-semibold">{{ __('Évaluateur') }}</div>
                         <div class="md:col-span-2">{{ $drivingTest->evaluator->name ?? 'N/A' }}</div>
 
                         <div class="md:col-span-1 font-semibold">{{ __('Statut') }}</div>
                         <div class="md:col-span-2">
+
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                 @switch($drivingTest->status)
                                     @case('completed') bg-green-100 text-green-800 @break
@@ -64,7 +65,9 @@
                                     @default bg-blue-100 text-blue-800 {{-- scheduled --}}
                                 @endswitch
                             ">
-                                {{ ucfirst($drivingTest->status) }}
+                                {{-- Use match expression for cleaner status display --}}
+                                {{-- Changed from 'completed', 'canceled', 'default' to the defined constants --}}
+                                {{ ucfirst(match($drivingTest->status){ {{$drivingTest::STATUS_SCHEDULED}} => 'Planifié', {{$drivingTest::STATUS_PASSED}} => 'Réussi', {{$drivingTest::STATUS_FAILED}} => 'Échoué', {{$drivingTest::STATUS_CANCELED}} => 'Annulé', default => 'Inconnu' }) }}
                             </span>
                         </div>
 
@@ -77,7 +80,7 @@
 
                     {{-- Section Résultats & Évaluation --}}
                      <h3 class="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">Résultats et Évaluation</h3>
-                     @if($drivingTest->status === 'completed')
+                     @if($drivingTest->status === {{$drivingTest::STATUS_PASSED}})
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div class="md:col-span-1 font-semibold">{{ __('Résultat') }}</div>
                             <div class="md:col-span-2">

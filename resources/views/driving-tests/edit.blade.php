@@ -53,11 +53,11 @@
                                 <select name="evaluator_id" id="evaluator_id" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" required>
                                     <option value="">-- Sélectionner un évaluateur --</option>
                                     @foreach($evaluators as $evaluator)
-                                        <option value="{{ $evaluator->id }}" {{ old('evaluator_id', $drivingTest->evaluator_id) == $evaluator->id ? 'selected' : '' }}>
-                                            {{ $evaluator->name }}
+                                        <option value="{{ $evaluator->id }}" {{ old('evaluator_id', $drivingTest->evaluator_id) == $evaluator->id ? 'selected' : '' }}>{{ $evaluator->first_name }} {{ $evaluator->last_name }}
                                         </option>
                                     @endforeach
                                 </select>
+
                             </div>
 
                              {{-- Véhicule --}}
@@ -65,11 +65,10 @@
                                 <label for="vehicle_id" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Véhicule Utilisé') }}</label>
                                 <select name="vehicle_id" id="vehicle_id" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600">
                                     <option value="">-- Sélectionner un véhicule (optionnel) --</option>
-                                    @foreach($vehicles as $vehicle)
-                                        <option value="{{ $vehicle->id }}" {{ old('vehicle_id', $drivingTest->vehicle_id) == $vehicle->id ? 'selected' : '' }}>
-                                            {{ $vehicle->brand }} {{ $vehicle->model }} ({{ $vehicle->plate_number }})
-                                        </option>
+                                    @foreach($vehicles as $vehicleType)
+                                        <option value="{{ $vehicleType }}" {{ old('vehicle_type', $drivingTest->vehicle_type) == $vehicleType ? 'selected' : '' }}>{{ $vehicleType }}</option>
                                     @endforeach
+
                                 </select>
                             </div>
 
@@ -83,39 +82,6 @@
                             <div>
                                 <label for="route_details" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Itinéraire / Conditions du Test') }}</label>
                                 <textarea name="route_details" id="route_details" rows="4" placeholder="Décrire l'itinéraire prévu, les manœuvres spécifiques, conditions météo..." class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600">{{ old('route_details', $drivingTest->route_details) }}</textarea>
-                            </div>
-
-                            <hr class="dark:border-gray-600">
-
-                            {{-- Champs pour la complétion du test --}}
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Résultats du Test</h3>
-
-                            {{-- Champ Statut --}}
-                            <div>
-                                <label for="status" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Statut du Test') }}</label>
-                                <select name="status" id="status" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600" required>
-                                    <option value="scheduled" {{ old('status', $drivingTest->status) == 'scheduled' ? 'selected' : '' }}>Planifié</option>
-                                    <option value="completed" {{ old('status', $drivingTest->status) == 'completed' ? 'selected' : '' }}>Terminé</option>
-                                    <option value="canceled" {{ old('status', $drivingTest->status) == 'canceled' ? 'selected' : '' }}>Annulé</option>
-                                </select>
-                            </div>
-
-                             {{-- Champ Résultat (Passed) --}}
-                            <div>
-                                <label for="passed" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Résultat (si Terminé)') }}</label>
-                                <select name="passed" id="passed" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600">
-                                    <option value="">-- Laisser vide si non terminé/annulé --</option>
-                                    {{-- La valeur envoyée sera '1' pour true, '0' pour false --}}
-                                    <option value="1" {{ old('passed', $drivingTest->passed) === true ? 'selected' : '' }}>Réussi</option>
-                                    <option value="0" {{ old('passed', $drivingTest->passed) === false ? 'selected' : '' }}>Échoué</option>
-                                </select>
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Choisir seulement si le statut est "Terminé".</p>
-                            </div>
-
-                            {{-- Champ Résumé des Résultats --}}
-                            <div>
-                                <label for="results_summary" class="block font-medium text-sm text-gray-700 dark:text-gray-300">{{ __('Résumé des Résultats / Commentaires Généraux') }}</label>
-                                <textarea name="results_summary" id="results_summary" rows="4" placeholder="Points forts, points faibles, remarques spécifiques..." class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600">{{ old('results_summary', $drivingTest->results_summary) }}</textarea>
                             </div>
 
                         </div>

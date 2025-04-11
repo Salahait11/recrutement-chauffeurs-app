@@ -22,6 +22,11 @@ class DrivingTest extends Model
         'results_summary',
     ];
 
+    const STATUS_SCHEDULED = 'planifie';
+    const STATUS_PASSED = 'reussi';
+    const STATUS_FAILED = 'echoue';
+    const STATUS_CANCELED = 'annule';
+
     protected $casts = [
         'test_date' => 'datetime',
         'passed' => 'boolean',
@@ -31,12 +36,13 @@ class DrivingTest extends Model
     public function evaluator(): BelongsTo { return $this->belongsTo(User::class, 'evaluator_id'); }
     public function vehicle(): BelongsTo { return $this->belongsTo(Vehicle::class); }
 
-    // VÉRIFIE QUE CETTE MÉTHODE EST BIEN PRÉSENTE :
-    /**
-     * Get the evaluations for the driving test.
-     */
-    public function evaluations(): HasMany
-    {
-        return $this->hasMany(Evaluation::class);
-    }
+       public static function getVehicleTypes(): array
+       {
+           return [
+               'Voiture',
+               'Camion',
+               'Moto',
+           ];
+       }
+
 }
