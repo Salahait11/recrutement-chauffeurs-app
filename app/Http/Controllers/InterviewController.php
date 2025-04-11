@@ -87,7 +87,7 @@ class InterviewController extends Controller
 
         $interview = new Interview($validatedData);
         $interview->scheduler_id = auth()->id();
-        $interview->status = Interview::STATUS_PLANIFIE;
+        $interview->status = 'scheduled';
         $interview->save();
 
         // Mise à jour du statut du candidat
