@@ -91,8 +91,7 @@ class DrivingTestController extends Controller
             $conflictingTest = DrivingTest::where('status', DrivingTest::STATUS_SCHEDULED)->where('test_date', $validatedData['test_date'])->where(function ($query) use ($validatedData) {
                 $query->where('vehicle_id', $validatedData['vehicle_id'])
                     ->orWhere('interviewer_id', $validatedData['interviewer_id']);
-            })
-                ->exists();
+            })->exists();
                 })
                 ->exists();
             if ($conflictingTest) {
