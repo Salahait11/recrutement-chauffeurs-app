@@ -12,9 +12,9 @@ class Interview extends Model
     use HasFactory;
 
     // Constantes pour les statuts d'entretien
-    const STATUS_PLANIFIE = 'planifié';
-    const STATUS_TERMINE = 'terminé';
-    const STATUS_ANNULE = 'annulé';
+    const STATUS_PLANIFIE = 'scheduled';
+    const STATUS_TERMINE = 'completed';
+    const STATUS_ANNULE = 'canceled';
 
     // Constantes pour les types d'entretien
     const TYPE_INITIAL = 'initial';
@@ -27,9 +27,9 @@ class Interview extends Model
     public static function getStatuses(): array
     {
         return [
-            self::STATUS_PLANIFIE,
-            self::STATUS_TERMINE,
-            self::STATUS_ANNULE,
+            'scheduled',
+            'completed',
+            'canceled',
         ];
     }
 
