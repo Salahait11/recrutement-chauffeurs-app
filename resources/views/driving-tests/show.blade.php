@@ -80,7 +80,7 @@
 
                     {{-- Section Résultats & Évaluation --}}
                      <h3 class="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">Résultats et Évaluation</h3>
-                     @if($drivingTest->status === {{$drivingTest::STATUS_PASSED}})
+                     @if($drivingTest->status === \App\Models\DrivingTest::STATUS_PASSED)
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div class="md:col-span-1 font-semibold">{{ __('Résultat') }}</div>
                             <div class="md:col-span-2">
