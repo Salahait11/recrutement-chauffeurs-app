@@ -37,4 +37,9 @@ class DrivingTest extends Model
     {
         return $this->belongsTo(User::class, 'evaluator_id');
     }
+
+    public function evaluations(): HasMany
+    {
+        return $this->hasMany(Evaluation::class);
+    }
 }
