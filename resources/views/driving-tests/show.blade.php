@@ -67,7 +67,7 @@
                             ">
                                 {{-- Use match expression for cleaner status display --}}
                                 {{-- Changed from 'completed', 'canceled', 'default' to the defined constants --}}
-                                {{ ucfirst(match($drivingTest->status){ $drivingTest::STATUS_SCHEDULED => 'Planifié', $drivingTest::STATUS_PASSED => 'Réussi', $drivingTest::STATUS_FAILED => 'Échoué', $drivingTest::STATUS_CANCELED => 'Annulé', default => 'Inconnu' }) }}
+                                {{ ucfirst(match($drivingTest->status){ strval($drivingTest::STATUS_SCHEDULED) => 'Planifié', strval($drivingTest::STATUS_PASSED) => 'Réussi', strval($drivingTest::STATUS_FAILED) => 'Échoué', strval($drivingTest::STATUS_CANCELED) => 'Annulé', default => 'Inconnu' }) }}
                             </span>
                         </div>
 
