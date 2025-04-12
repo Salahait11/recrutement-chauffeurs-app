@@ -32,4 +32,9 @@ class DrivingTest extends Model
 
     public function candidate(): BelongsTo { return $this->belongsTo(Candidate::class); }
     public function vehicle(): BelongsTo { return $this->belongsTo(Vehicle::class); }
+
+    public function evaluator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'evaluator_id');
+    }
 }
