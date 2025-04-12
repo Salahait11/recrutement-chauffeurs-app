@@ -171,19 +171,14 @@ class DrivingTestController extends Controller
             'vehicle_id' => 'nullable|exists:vehicles,id',
             'test_date' => 'required|date',
             'route_details' => 'nullable|string|max:1000',
-            'status' => ['required', Rule::in(['scheduled', 'completed', 'canceled'])],
+            'status' => ['required', Rule::in([DrivingTest::STATUS_SCHEDULED, DrivingTest::STATUS_PASSED, DrivingTest::STATUS_FAILED, DrivingTest::STATUS_CANCELED])],
             'passed' => 'nullable|boolean', // 0 ou 1 du formulaire
             'results_summary' => 'nullable|string|max:2000',
         ]);
 
-         // Assurer que 'passed' est null si pas 'completed'
-         if ($validatedData['status'] !== 'completed') {
-             $validatedData['passed'] = null;
-         } else {
-             // Convertir la valeur de la checkbox/select 'passed' en booléen
-             $validatedData['passed'] = filter_var($request->input('passed'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-         }
-
+        if ($validatedData['status'] !== DrivingTest::STATUS_PASSED && $validatedData['status'] !== DrivingTest::STATUS_FAILED) {
+            $validatedData['passed'] = null;
+        }
          try {
             $drivingTest->update($validatedData);
             return Redirect::route('driving-tests.show', $drivingTest->id)->with('success', 'Test mis à jour.');
