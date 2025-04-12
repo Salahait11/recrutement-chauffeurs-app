@@ -1,269 +1,217 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use App\Models\Candidate;
+// Models
 use App\Models\DrivingTest;
+use App\Models\Candidate;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Models\Evaluation; // Si on veut vérifier l'évaluation existante
+
+// Facades & Classes
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Database\QueryException;
+use Carbon\Carbon;
 
 class DrivingTestController extends Controller
 {
+    
     public function index(Request $request)
     {
-        $query = DrivingTest::with(['candidate', 'vehicle', 'interviewer']);
-    
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
-        }
-    
-        if ($request->filled('date')) {
-            $query->whereDate('test_date', '=', $request->input('date'));
-        }
+        // Récupérer les filtres
+        $statusFilter = $request->query('status');
+        $candidateFilter = $request->query('candidate_id');
+        $dateFromFilter = $request->query('date_from');
+        $dateToFilter = $request->query('date_to');
+        $evaluatorFilter = $request->query('evaluator_id'); // Filtre évaluateur optionnel
+        $vehicleFilter = $request->query('vehicle_id'); // Filtre véhicule optionnel
 
-        $drivingTests = $query->latest()->paginate(10);
+        $query = DrivingTest::with(['candidate', 'evaluator', 'vehicle']); // Eager load
 
-        return view('driving-tests.index', compact('drivingTests'));
+        // Filtre Statut
+        $allowedStatuses = ['scheduled', 'completed', 'canceled'];
+        if ($statusFilter && $statusFilter !== 'all' && in_array($statusFilter, $allowedStatuses)) {
+             $query->where('status', $statusFilter);
+         } else { $statusFilter = null; }
+
+        // Filtre Candidat (Pour Admin/Recruiter)
+         // !! Adapter logique de rôle !!
+         $canFilterByCandidate = Auth::user()->isAdmin(); // || Auth::user()->isRecruiter();
+         if ($canFilterByCandidate && $candidateFilter) {
+             $query->where('candidate_id', $candidateFilter);
+         } else { $candidateFilter = null; }
+
+        // Filtre Evaluateur (Pour Admin/Recruiter)
+         if ($canFilterByCandidate && $evaluatorFilter) {
+             $query->where('evaluator_id', $evaluatorFilter);
+         } else { $evaluatorFilter = null; }
+
+         // Filtre Vehicule (Pour Admin/Recruiter)
+         if ($canFilterByCandidate && $vehicleFilter) {
+             $query->where('vehicle_id', $vehicleFilter);
+         } else { $vehicleFilter = null; }
+
+          // Filtre Date (sur test_date)
+          if ($dateFromFilter) {
+              try { $query->where('test_date', '>=', Carbon::parse($dateFromFilter)->startOfDay()); }
+              catch (\Exception $e) { $dateFromFilter = null; }
+          }
+           if ($dateToFilter) {
+              try { $query->where('test_date', '<=', Carbon::parse($dateToFilter)->endOfDay()); }
+              catch (\Exception $e) { $dateToFilter = null; }
+           }
+
+        // Trier et Paginer
+        $drivingTests = $query->orderBy('test_date', 'desc')->paginate(15);
+
+        // Appends
+        $drivingTests->appends($request->only(['status', 'candidate_id', 'date_from', 'date_to', 'evaluator_id', 'vehicle_id']));
+
+        // Données pour les filtres de la vue
+        $statuses = $allowedStatuses;
+        $candidates = $canFilterByCandidate ? Candidate::orderBy('last_name')->get(['id', 'first_name', 'last_name']) : collect();
+        $evaluators = $canFilterByCandidate ? User::orderBy('name')->get(['id', 'name']) : collect(); // Ou filtrer par rôle évaluateur?
+        $vehicles = $canFilterByCandidate ? Vehicle::orderBy('plate_number')->get(['id', 'plate_number', 'brand', 'model']) : collect();
+
+
+        return view('driving-tests.index', compact(
+            'drivingTests', 'statuses', 'candidates', 'evaluators', 'vehicles',
+            'statusFilter', 'candidateFilter', 'dateFromFilter', 'dateToFilter', 'evaluatorFilter', 'vehicleFilter'
+        ));
     }
 
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create()
     {
-        $candidates = Candidate::where('status', Candidate::STATUS_TEST)
-            ->orderBy('last_name')
-            ->orderBy('first_name')
-            ->get();
-    
-        $vehicles = Vehicle::where('is_available', true)->orderBy('brand')->orderBy('model')->get();
-    
-        $admins = User::role('Admin')->orderBy('name')->get();
-    
-        if ($candidates->isEmpty()) {
-            Log::warning('DrivingTestController@create: No candidates found with status \'test\'.');
-            session()->flash('warning', 'Aucun candidat éligible (statut test) trouvé.');
-        }
-    
-        if ($vehicles->isEmpty()) {
-            Log::warning('DrivingTestController@create: No available vehicles found.');
-            session()->flash('warning', 'Aucun véhicule disponible trouvé.');
-        }
-        if ($admins->isEmpty()) {
-            Log::warning('DrivingTestController@create: No users found with the \'Admin\' role.');
-            session()->flash('warning', 'Aucun examinateur (Admin) trouvé.');
-        }
+        // !! Vérifier autorisation de créer !!
+        // $this->authorize('create', DrivingTest::class);
 
-        return view('driving-tests.create', compact('candidates', 'vehicles','admins'));
+        $candidates = Candidate::whereNotIn('status', ['hired', 'rejected'])->orderBy('last_name')->get(['id', 'first_name', 'last_name']); // Candidats pertinents
+        $evaluators = User::orderBy('name')->get(['id', 'name']); // A affiner avec rôles
+        $vehicles = Vehicle::where('is_available', true)->orderBy('plate_number')->get(['id', 'plate_number', 'brand', 'model']);
+
+        return view('driving-tests.create', compact('candidates', 'evaluators', 'vehicles'));
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request)
     {
+        // !! Vérifier autorisation !!
+        // $this->authorize('create', DrivingTest::class);
+
         $validatedData = $request->validate([
             'candidate_id' => 'required|exists:candidates,id',
-            'interviewer_id' => 'required|exists:users,id',
-            'vehicle_id' => 'required|exists:vehicles,id',
-            'test_date' => 'required|date|after_or_equal:now',
-            'notes' => 'nullable|string'
-        ]);
+            'evaluator_id' => 'required|exists:users,id',
+            'vehicle_id' => 'nullable|exists:vehicles,id',
+            'test_date' => 'required|date|after_or_equal:today',
+            'route_details' => 'nullable|string|max:1000',
+        ],[/* ... messages custom ... */]);
+
+        $validatedData['status'] = 'scheduled'; // Statut initial
 
         try {
-            DB::beginTransaction();
-            $candidate = Candidate::findOrFail($validatedData['candidate_id']);
-            if($candidate->status !== Candidate::STATUS_TEST){
-                throw new \Exception('Le candidat selectionné n est plus éligible pour un test de conduite.');
-            }
-            $interviewer = User::findOrFail($validatedData['interviewer_id']);
-            if (!$interviewer->hasRole('Admin')) { // Adjust role if needed
-                throw new \Exception('L\'utilisateur selectionné n\'est pas un examinateur valide.');
-            }
-
-            $vehicle = Vehicle::findOrFail($validatedData['vehicle_id']);
-            if (!$vehicle->is_available) {
-                throw new \Exception('Le véhicule sélectionné n\'est pas disponible.');
-            }
-
-            $existingTest = DrivingTest::where('candidate_id', $validatedData['candidate_id'])->where('status', DrivingTest::STATUS_SCHEDULED)->exists();
-            if ($existingTest) {
-                throw new \Exception('Le candidat a déjà un test de conduite planifié.');
-            }
-
-            $conflictingTest = DrivingTest::where('status', DrivingTest::STATUS_SCHEDULED)->where('test_date', $validatedData['test_date'])->where(function ($query) use ($validatedData) {
-                    $query->where('vehicle_id', $validatedData['vehicle_id'])
-                          ->orWhere('interviewer_id', $validatedData['interviewer_id']);
-                })->exists();
-
-            if ($conflictingTest) {
-                throw new \Exception('Conflit d\'horaire: Le véhicule ou l\'examinateur est déjà réservé à cette date/heure.');
-            }
-
-            $test = DrivingTest::create([
-                'candidate_id' => $validatedData['candidate_id'],
-                'interviewer_id' => $validatedData['interviewer_id'],
-                'vehicle_id' => $validatedData['vehicle_id'],
-                'test_date' => $validatedData['test_date'],
-                'notes' => $validatedData['notes'],
-                'status' => DrivingTest::STATUS_SCHEDULED
-            ]);
-
-            DB::commit();
-
-            return redirect()->route('driving-tests.show', $test)->with('success', 'Test de conduite planifié avec succès.');
+            DrivingTest::create($validatedData);
+            return Redirect::route('driving-tests.index')->with('success', 'Test de conduite planifié.');
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Erreur création test de conduite: ' . $e->getMessage());
-            $errorMessage = 'Erreur lors de la planification du test de conduite.';
-            $knownMessages = [
-                'Le candidat selectionné n est plus éligible pour un test de conduite.',
-                'L\'utilisateur selectionné n\'est pas un examinateur valide.',
-                'Le véhicule sélectionné n\'est pas disponible.',
-                'Conflit d\'horaire: Le véhicule ou l\'examinateur est déjà réservé à cette date/heure.',
-                'Le candidat a déjà un test de conduite planifié.'
-            ];
-            if (in_array($e->getMessage(), $knownMessages)) {
-                $errorMessage = $e->getMessage();
-            }
-
-            return back()->withInput()->with('error', $errorMessage);
+            Log::error("Erreur création test conduite: " . $e->getMessage());
+            return Redirect::back()->withInput()->with('error', 'Erreur planification test.');
         }
     }
 
-    public function show(DrivingTest $drivingTest)
+    /**
+     * Display the specified resource.
+     */
+    public function show(DrivingTest $drivingTest) // Utilise le nom de variable cohérent
     {
-        $drivingTest->load(['candidate', 'vehicle', 'interviewer']);
+        // !! Vérifier autorisation !!
+        // $this->authorize('view', $drivingTest);
+
+        $drivingTest->load(['candidate', 'evaluator', 'vehicle', 'evaluations']); // Charger relations + évaluations
         return view('driving-tests.show', compact('drivingTest'));
     }
 
+    /**
+     * Show the form for editing the specified resource.
+     */
     public function edit(DrivingTest $drivingTest)
     {
-        if ($drivingTest->status !== DrivingTest::STATUS_SCHEDULED) {
-            return redirect()->route('driving-tests.show', $drivingTest)->with('error', 'Seuls les tests planifiés peuvent être modifiés.');
-        }
-        $candidates = Candidate::where('status', Candidate::STATUS_TEST)->orderBy('last_name')->orderBy('first_name')->get();
-        $vehicles = Vehicle::where('is_available', true)->orderBy('brand')->orderBy('model')->get();
-        $admins = User::role('Admin')->orderBy('name')->get();
+         // !! Vérifier autorisation !!
+         // $this->authorize('update', $drivingTest);
 
-        return view('driving-tests.edit', compact('drivingTest','candidates', 'vehicles', 'admins'));
+         $drivingTest->load(['candidate', 'evaluator', 'vehicle']);
+         $candidates = Candidate::orderBy('last_name')->get(['id', 'first_name', 'last_name']);
+         $evaluators = User::orderBy('name')->get(['id', 'name']);
+         $vehicles = Vehicle::orderBy('plate_number')->get(['id', 'plate_number', 'brand', 'model']);
+         $statuses = ['scheduled', 'completed', 'canceled']; // Pour le select statut
+
+        return view('driving-tests.edit', compact('drivingTest', 'candidates', 'evaluators', 'vehicles', 'statuses'));
     }
 
+    /**
+     * Update the specified resource in storage.
+     */
     public function update(Request $request, DrivingTest $drivingTest)
     {
-        if ($drivingTest->status !== DrivingTest::STATUS_SCHEDULED) {
-            return redirect()->route('driving-tests.show', $drivingTest)->with('error', 'Seuls les tests planifiés peuvent être modifiés.');
-        }
+         // !! Vérifier autorisation !!
+         // $this->authorize('update', $drivingTest);
 
-        $validatedData = $request->validate([
-            'interviewer_id' => 'required|exists:users,id',
-            'vehicle_id' => 'required|exists:vehicles,id',
-            'test_date' => 'required|date|after_or_equal:now',
-            'notes' => 'nullable|string'
+         $validatedData = $request->validate([
+            'candidate_id' => 'required|exists:candidates,id',
+            'evaluator_id' => 'required|exists:users,id',
+            'vehicle_id' => 'nullable|exists:vehicles,id',
+            'test_date' => 'required|date',
+            'route_details' => 'nullable|string|max:1000',
+            'status' => ['required', Rule::in(['scheduled', 'completed', 'canceled'])],
+            'passed' => 'nullable|boolean', // 0 ou 1 du formulaire
+            'results_summary' => 'nullable|string|max:2000',
         ]);
 
-        try {
-            DB::beginTransaction();
-            $interviewer = User::findOrFail($validatedData['interviewer_id']);
-            if (!$interviewer->hasRole('Admin')) {
-                throw new \Exception('L\'examinateur selectionné n\'est plus valide.');
-            }
-            $vehicle = Vehicle::findOrFail($validatedData['vehicle_id']);
-            if (!$vehicle->is_available) {
-                throw new \Exception('Le véhicule selectionné n\'est plus disponible.');
-            }
-            $conflictingTest = DrivingTest::where('status', DrivingTest::STATUS_SCHEDULED)->where('id', '!=', $drivingTest->id)->where('test_date', $validatedData['test_date'])->where(function ($query) use ($validatedData) {
-                $query->where('vehicle_id', $validatedData['vehicle_id'])
-                    ->orWhere('interviewer_id', $validatedData['interviewer_id']);
-                })
-                ->exists(); // Fix: Removed an extra ->exists();
-            if ($conflictingTest) {
-                throw new \Exception('Conflit d\'horaire: Le véhicule ou l\'examinateur est déjà reservé à cette date/heure pour un autre test.');
-            }
+         // Assurer que 'passed' est null si pas 'completed'
+         if ($validatedData['status'] !== 'completed') {
+             $validatedData['passed'] = null;
+         } else {
+             // Convertir la valeur de la checkbox/select 'passed' en booléen
+             $validatedData['passed'] = filter_var($request->input('passed'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+         }
 
+         try {
             $drivingTest->update($validatedData);
-            DB::commit();
-
-            return redirect()->route('driving-tests.show', $drivingTest)->with('success', 'Test de conduite mis à jour avec succès.');
+            return Redirect::route('driving-tests.show', $drivingTest->id)->with('success', 'Test mis à jour.');
         } catch (\Exception $e) {
-             DB::rollBack();
-             Log::error("Erreur mise à jour test de conduite (ID: {$drivingTest->id}): " . $e->getMessage());
-
-             $errorMessage = 'Erreur lors de la mise à jour du test de conduite.';
-              $knownMessages = [
-                'L\'examinateur selectionné n\'est plus valide.',
-                'Le véhicule selectionné n\'est plus disponible.',
-                'Conflit d\'horaire: Le véhicule ou l\'examinateur est déjà reservé à cette date/heure pour un autre test.'
-              ];
-             if (in_array($e->getMessage(), $knownMessages)) {
-                $errorMessage = $e->getMessage();
-             }
-
-            return back()->withInput()->with('error', $errorMessage);
-        }
-    }
-    
-   
-    
-    public function updateStatus(Request $request, DrivingTest $drivingTest)
-    {
-        $validatedData = $request->validate([
-            'status' => ['required', 'in:' . implode(',', [
-                DrivingTest::STATUS_PASSED,
-                DrivingTest::STATUS_FAILED,
-                DrivingTest::STATUS_CANCELED,
-            ])],
-            'feedback' => 'nullable|string'
-        ]);
-
-        try {
-            DB::beginTransaction();
-
-            if ($drivingTest->status !== DrivingTest::STATUS_SCHEDULED) {
-                throw new \Exception('Seuls les tests planifiés peuvent être complétés ou annulés.');
-            }
-
-            $drivingTest->update([
-                'status' => $validatedData['status'],
-                'feedback' => $validatedData['feedback']
-            ]);
-
-            if ($validatedData['status'] === DrivingTest::STATUS_FAILED) {
-                $drivingTest->candidate->update(['status' => Candidate::STATUS_REFUSE]);
-            } elseif ($validatedData['status'] === DrivingTest::STATUS_PASSED) {
-                // $drivingTest->candidate->update(['status' => Candidate::STATUS_OFFER]);
-            }
-
-            DB::commit();
-
-            return redirect()->route('driving-tests.show', $drivingTest)
-                ->with('success', 'Statut du test de conduite mis à jour avec succès.');
-
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error("Erreur mise à jour statut test de conduite (ID: {$drivingTest->id}): " . $e->getMessage());
-
-            $errorMessage = 'Erreur lors de la mise à jour du statut du test.';
-             if ($e->getMessage() === 'Seuls les tests planifiés peuvent être complétés ou annulés.') {
-                $errorMessage = $e->getMessage();
-             }
-
-            return back()->with('error', $errorMessage);
+            Log::error("Erreur MAJ test conduite ID {$drivingTest->id}: " . $e->getMessage());
+            return Redirect::back()->withInput()->with('error', 'Erreur mise à jour test.');
         }
     }
 
-
-
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy(DrivingTest $drivingTest)
     {
-        if(!in_array($drivingTest->status, [DrivingTest::STATUS_SCHEDULED, DrivingTest::STATUS_CANCELED])){
-            return back()->with('error', 'Seuls les tests planifiés ou annulés peuvent être supprimés.');
-        }
+        // !! Vérifier autorisation !!
+        // $this->authorize('delete', $drivingTest);
+
         try {
+            // Supprimer les évaluations liées avant ? Ou laisser cascade ?
+            // $drivingTest->evaluations()->delete();
             $drivingTest->delete();
-            return redirect()->route('driving-tests.index')
-                ->with('success', 'Test de conduite supprimé avec succès.');
+            return Redirect::route('driving-tests.index')->with('success', 'Test supprimé.');
+        } catch (QueryException $e) {
+             Log::error("Erreur suppression test conduite FK ID {$drivingTest->id}: ".$e->getMessage());
+             return Redirect::route('driving-tests.index')->with('error', 'Erreur suppression: contrainte BDD.');
         } catch (\Exception $e) {
-            Log::error('Erreur suppression test de conduite (ID: '.$drivingTest->id.'): '.$e->getMessage());
-            return back()->with('error', 'Erreur lors de la suppression du test de conduite.');
+            Log::error("Erreur suppression test conduite ID {$drivingTest->id}: ".$e->getMessage());
+            return Redirect::route('driving-tests.index')->with('error', 'Erreur suppression.');
         }
     }
 }
