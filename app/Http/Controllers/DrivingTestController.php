@@ -152,7 +152,7 @@ class DrivingTestController extends Controller
          $candidates = Candidate::orderBy('last_name')->get(['id', 'first_name', 'last_name']);
          $evaluators = User::orderBy('name')->get(['id', 'name']);
          $vehicles = Vehicle::orderBy('plate_number')->get(['id', 'plate_number', 'brand', 'model']);
-         $statuses = ['scheduled', 'completed', 'canceled']; // Pour le select statut
+         $statuses = [DrivingTest::STATUS_SCHEDULED, DrivingTest::STATUS_PASSED, DrivingTest::STATUS_FAILED, DrivingTest::STATUS_CANCELED]; // Pour le select statut
 
         return view('driving-tests.edit', compact('drivingTest', 'candidates', 'evaluators', 'vehicles', 'statuses'));
     }
