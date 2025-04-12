@@ -59,15 +59,23 @@
                         <div class="md:col-span-2">
 
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                @switch($drivingTest->status)
-                                    @case('completed') bg-green-100 text-green-800 @break
-                                    @case('canceled') bg-red-100 text-red-800 @break
-                                    @default bg-blue-100 text-blue-800 {{-- scheduled --}}
-                                @endswitch
-                            ">
-                                {{-- Use match expression for cleaner status display --}}
-                                {{-- Changed from 'completed', 'canceled', 'default' to the defined constants --}}
-                                {{ ucfirst(match($drivingTest->status){ strval($drivingTest::STATUS_SCHEDULED) => 'Planifié', strval($drivingTest::STATUS_PASSED) => 'Réussi', strval($drivingTest::STATUS_FAILED) => 'Échoué', strval($drivingTest::STATUS_CANCELED) => 'Annulé', default => 'Inconnu' }) }}
+                                  @switch($drivingTest->status)
+                                      @case(\App\Models\DrivingTest::STATUS_SCHEDULED)
+                                          bg-blue-100 text-blue-800
+                                          @break
+                                      @case(\App\Models\DrivingTest::STATUS_PASSED)
+                                          bg-green-100 text-green-800
+                                          @break
+                                      @case(\App\Models\DrivingTest::STATUS_FAILED)
+                                          bg-red-100 text-red-800
+                                          @break
+                                      @case(\App\Models\DrivingTest::STATUS_CANCELED)
+                                          bg-gray-100 text-gray-800
+                                          @break
+                                      @default bg-gray-200 text-gray-700
+                                  @endswitch
+                              ">
+                                {{ ucfirst($drivingTest->status) }}
                             </span>
                         </div>
 
@@ -80,7 +88,7 @@
 
                     {{-- Section Résultats & Évaluation --}}
                      <h3 class="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">Résultats et Évaluation</h3>
-                     @if($drivingTest->status === \App\Models\DrivingTest::STATUS_PASSED)
+                     @if($drivingTest->status === \App\Models\DrivingTest::STATUS_PASSED )
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div class="md:col-span-1 font-semibold">{{ __('Résultat') }}</div>
                             <div class="md:col-span-2">
@@ -98,7 +106,7 @@
 
                         {{-- Liens vers Évaluation --}}
                         <div class="mt-4">
-                             @if($drivingTest->evaluations()->exists())
+                            @if($drivingTest->evaluations()->exists())
                                 <a href="{{ route('evaluations.show', $drivingTest->evaluations()->first()->id) }}" class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
                                     Voir l'Évaluation
                                 </a>
@@ -108,14 +116,21 @@
                                     Évaluer ce Test
                                 </a>
                             @endif
-                        </div>
-
-                     @else
+                         </div>
+                      @elseif($drivingTest->status !== \App\Models\DrivingTest::STATUS_SCHEDULED)
                         <div class="text-center text-gray-500 dark:text-gray-400 italic py-4">
-                            Les résultats et l'évaluation ne sont disponibles qu'une fois le test marqué comme terminé.
+                            {{__("Le test est terminé. Veuillez enregistrer les résultats.")}}
                             <br>
-                             <a href="{{ route('driving-tests.edit', $drivingTest->id) }}" class="mt-2 inline-flex items-center px-4 py-2 bg-yellow-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
-                                Enregistrer les Résultats / Modifier le Test
+                            <a href="{{ route('driving-tests.edit', $drivingTest->id) }}" class="mt-2 inline-flex items-center px-4 py-2 bg-yellow-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                                {{__("Enregistrer le résultat")}}
+                            </a>                            
+                        </div>
+                      @else
+                        <div class="text-center text-gray-500 dark:text-gray-400 italic py-4">
+                            {{__("Les résultats et l'évaluation ne sont disponibles qu'une fois le test marqué comme terminé.")}}
+                            <br>
+                            <a href="{{ route('driving-tests.edit', $drivingTest->id) }}" class="mt-2 inline-flex items-center px-4 py-2 bg-yellow-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                                {{__("Modifier le Test")}}
                             </a>
                         </div>
                      @endif
@@ -124,7 +139,8 @@
 
                     {{-- Zone pour les actions sur le test lui-même --}}
                     <div class="flex justify-end space-x-3 mt-6">
-                         <a href="{{ route('driving-tests.edit', $drivingTest->id) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                        @if($drivingTest->status === \App\Models\DrivingTest::STATUS_SCHEDULED)
+                            <a href="{{ route('driving-tests.edit', $drivingTest->id) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
                             {{ __('Modifier') }}
                         </a>
                         <form method="POST" action="{{ route('driving-tests.destroy', $drivingTest->id) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce test ?');" class="inline">
@@ -134,6 +150,7 @@
                                 {{ __('Supprimer') }}
                             </button>
                         </form>
+                        @endif
                     </div>
 
                 </div>
