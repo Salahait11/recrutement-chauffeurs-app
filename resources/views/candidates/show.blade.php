@@ -66,30 +66,19 @@
                         <div class="md:col-span-2">{{ $candidate->years_of_experience }} {{ Str::plural('an', $candidate->years_of_experience) }}</div>
 
                         <div class="md:col-span-1 font-semibold">{{ __('Statut') }}</div>
-                        <div class="md:col-span-2 flex items-center space-x-4">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                @if($candidate->status === \App\Models\Candidate::STATUS_EMBAUCHE)
-                                    bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
-                                @elseif($candidate->status === \App\Models\Candidate::STATUS_REFUSE)
-                                    bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100
-                                @else
-                                    bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100
-                                @endif
-                            ">
-                                {{ $statuses[$candidate->status] }}
-                            </span>
-                            
-                            <form method="POST" action="{{ route('candidates.update', $candidate->id) }}">
-                                @csrf
-                                @method('PUT')
-                                <select name="status" onchange="this.form.submit()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                    <option disabled>{{ __('Changer le statut') }}</option>
-                                    @foreach($statuses as $value => $label)
-                                        <option value="{{ $value }}" {{ $candidate->status === $value ? 'selected' : '' }}>{{ $label }}</option>
-                                    @endforeach
-                                </select>
-                            </form>
-                        </div>
+<div class="md:col-span-2">
+    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+        @if($candidate->status === \App\Models\Candidate::STATUS_EMBAUCHE)
+            bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
+        @elseif($candidate->status === \App\Models\Candidate::STATUS_REFUSE)
+            bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100
+        @else
+            bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100
+        @endif
+    ">
+        {{ $statuses[$candidate->status] }}
+    </span>
+</div>
                         <div class="md:col-span-1 font-semibold">{{ __('Notes') }}</div>
                         <div class="md:col-span-2 whitespace-pre-wrap">{{ $candidate->notes ?? 'Aucune note' }}</div>
 

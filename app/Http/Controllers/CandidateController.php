@@ -50,42 +50,34 @@ class CandidateController extends Controller
         return view('candidates.create');
     }
 
-    public function store(Request $request)
-    {
-        $validatedData = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:candidates,email',
-            'phone' => 'required|string|max:20',
-            'address' => 'required|string|max:255',
-            'birth_date' => 'required|date',
-            'driving_license_number' => 'required|string|max:50|unique:candidates,driving_license_number',
-            'driving_license_expiry' => 'required|date|after:today',
-            'years_of_experience' => 'required|integer|min:0',
-            'notes' => 'nullable|string'
-        ]);
+   public function store(Request $request)
+{
+    $validatedData = $request->validate([
+        'first_name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'email' => 'required|email|unique:candidates,email',
+        'phone' => 'required|string|max:20',
+        'address' => 'required|string|max:255',
+        'birth_date' => 'required|date',
+        'driving_license_number' => 'required|string|max:50|unique:candidates,driving_license_number',
+        'driving_license_expiry' => 'required|date|after:today',
+        'years_of_experience' => 'required|integer|min:0',
+        'status' => 'required|string|in:' . implode(',', array_keys(Candidate::$statuses)),
+        'notes' => 'nullable|string',
+    ]);
 
-        try {
-            DB::beginTransaction();
+    try {
+        DB::transaction(function () use ($validatedData) {
+            Candidate::create($validatedData);
+        });
 
-            // Le statut est automatiquement défini à 'nouveau'
-            $validatedData['status'] = Candidate::STATUS_NOUVEAU;
-            
-            $candidate = Candidate::create($validatedData);
+        return redirect()->route('candidates.index')->with('success', 'Candidat ajouté avec succès.');
 
-            DB::commit();
-
-            return redirect()->route('candidates.index')
-                ->with('success', 'Candidat créé avec succès.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error("Erreur création candidat: " . $e->getMessage());
-            return back()
-                ->withInput()
-                ->with('error', 'Erreur lors de la création du candidat.');
-        }
+    } catch (\Exception $e) {
+        Log::error('Erreur lors de l’ajout du candidat : ' . $e->getMessage());
+        return back()->with('error', 'Erreur lors de l’ajout du candidat.');
     }
+}
 
     public function show(Candidate $candidate)
     {
@@ -100,48 +92,34 @@ class CandidateController extends Controller
         return view('candidates.edit', compact('candidate','statuses'));
     }
 
-    public function update(Request $request, Candidate $candidate)
-    {
-        $validatedData = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:candidates,email,' . $candidate->id,
-            'phone' => 'required|string|max:20',
-            'address' => 'required|string|max:255',
-            'birth_date' => 'required|date',
-            'driving_license_number' => 'required|string|max:50|unique:candidates,driving_license_number,' . $candidate->id,
-            'driving_license_expiry' => 'required|date|after:today',
-            'years_of_experience' => 'required|integer|min:0',
-            'notes' => 'nullable|string',
-            'status' => 'required|in:' . implode(',', [
-                Candidate::STATUS_NOUVEAU,
-                Candidate::STATUS_CONTACTE,
-                Candidate::STATUS_ENTRETIEN,
-                Candidate::STATUS_TEST,
-                Candidate::STATUS_OFFRE,
-                Candidate::STATUS_EMBAUCHE,
-                Candidate::STATUS_REFUSE
-            ])
-        ]);
+   public function update(Request $request, Candidate $candidate)
+{
+    $validatedData = $request->validate([
+        'first_name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'email' => 'required|email|unique:candidates,email,' . $candidate->id,
+        'phone' => 'required|string|max:20',
+        'address' => 'required|string|max:255',
+        'birth_date' => 'required|date',
+        'driving_license_number' => 'required|string|max:50|unique:candidates,driving_license_number,' . $candidate->id,
+        'driving_license_expiry' => 'required|date|after:today',
+        'years_of_experience' => 'required|integer|min:0',
+        'status' => 'required|string|in:' . implode(',', array_keys(Candidate::$statuses)),
+        'notes' => 'nullable|string',
+    ]);
 
-        try {
-            DB::beginTransaction();
-
+    try {
+        DB::transaction(function () use ($candidate, $validatedData) {
             $candidate->update($validatedData);
+        });
 
-            DB::commit();
+        return redirect()->route('candidates.index')->with('success', 'Candidat mis à jour avec succès.');
 
-            return redirect()->route('candidates.show', $candidate)
-                ->with('success', 'Candidat mis à jour avec succès.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error("Erreur mise à jour candidat: " . $e->getMessage());
-            return back()
-                ->withInput()
-                ->with('error', 'Erreur lors de la mise à jour du candidat.');
-        }
+    } catch (\Exception $e) {
+        Log::error('Erreur lors de la mise à jour du candidat : ' . $e->getMessage());
+        return back()->with('error', 'Erreur lors de la mise à jour du candidat.');
     }
+}
 
     public function destroy(Candidate $candidate)
     {
