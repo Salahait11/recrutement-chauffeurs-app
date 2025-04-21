@@ -1,6 +1,6 @@
 php
---- a/database/migrations/2025_04_05_134000_alter_interviews_table_add_interviewer_id.php
-++ b/database/migrations/2025_04_05_132000_alter_interviews_table_add_interviewer_id.php
+<?php
+rename('2025_04_05_134000_alter_interviews_table_add_interviewer_id.php');
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
