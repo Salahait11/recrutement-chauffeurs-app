@@ -31,7 +31,9 @@
                                     <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($interview->interview_date)->format('d/m/Y') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $interview->type }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $interview->candidate->getFullName() }}</td>
-                                     <td class="px-6 py-4 whitespace-nowrap">{{ $interview->interviewer->name }}</td>
+                                     <td class="px-6 py-4 whitespace-nowrap">
+                                        {{ $interview->interviewer ? $interview->interviewer->name : '-' }}
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $interview->scheduler->name}}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $interview->status }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">

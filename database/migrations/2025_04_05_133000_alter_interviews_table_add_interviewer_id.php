@@ -1,0 +1,38 @@
+php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('interviews', function (Blueprint $table) {
+            $table->unsignedBigInteger('candidate_id')->nullable()->change();
+            $table->unsignedBigInteger('scheduler_id')->nullable()->change();
+            $table->dateTime('interview_date')->nullable()->change();
+            $table->string('type')->nullable()->change();
+            $table->string('status')->nullable()->change();
+            $table->unsignedBigInteger('interviewer_id')->nullable()->after('scheduler_id');
+            $table->foreign('interviewer_id')->references('id')->on('users')->onDelete('set null');
+
+
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('interviews', function (Blueprint $table) {
+            $table->dropForeign(['interviewer_id']);
+            $table->dropColumn('interviewer_id');
+        });
+    }
+};
