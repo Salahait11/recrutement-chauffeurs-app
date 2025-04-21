@@ -17,8 +17,9 @@ class DatabaseSeeder extends Seeder
              AdminUserSeeder::class, // <<< ASSURE-TOI QUE CET APPEL EST PRESENT
             EvaluationCriteriaSeeder::class, // Garde les autres seeders utiles
             VehicleSeeder::class,
+            CandidateSeeder::class,
             LeaveTypeSeeder::class,
-            
+            InterviewSeeder::class,
         ]);
     }
 }

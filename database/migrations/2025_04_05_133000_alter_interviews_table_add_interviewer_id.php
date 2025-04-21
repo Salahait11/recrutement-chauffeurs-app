@@ -20,8 +20,6 @@ return new class extends Migration
             $table->string('status')->nullable()->change();
             $table->unsignedBigInteger('interviewer_id')->nullable()->after('scheduler_id');
             $table->foreign('interviewer_id')->references('id')->on('users')->onDelete('set null');
-
-
         });
     }
 
