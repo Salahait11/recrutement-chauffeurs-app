@@ -32,6 +32,14 @@
                             </select>
                         </div>
                         <div>
+                            <label for="interviewer_id">Interviewer</label>
+                            <select name="interviewer_id" id="interviewer_id">
+                                @foreach(\App\Models\User::all() as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
                             <label for="interview_date">Date de l'entretien</label>
                             <input type="datetime-local" name="interview_date" id="interview_date">
                         </div>

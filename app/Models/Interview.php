@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+
 use Illuminate\Database\Eloquent\Model;
 
 class Interview extends Model
@@ -12,6 +15,7 @@ class Interview extends Model
     protected $fillable = [
         'candidate_id',
         'scheduler_id',
+        'interviewer_id',
         'interview_date',
         'type',
         'notes',
@@ -37,5 +41,20 @@ class Interview extends Model
             'final',
         ];
     }
+    public function candidate(): BelongsTo
+    {
+        return $this->belongsTo(Candidate::class);
+    }
+
+    public function scheduler(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'scheduler_id');
+    }
+    public function interviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'interviewer_id');
+    }
+
+
 
 }

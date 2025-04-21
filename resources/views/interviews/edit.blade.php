@@ -28,7 +28,17 @@
                             <select name="candidate_id" id="candidate_id" required>
                                 @foreach(\App\Models\Candidate::all() as $candidate)
                                     <option value="{{ $candidate->id }}" {{ $interview->candidate_id == $candidate->id ? 'selected' : '' }}>
-                                        {{ $candidate->name }}
+                                        {{ $candidate->getFullName() }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                         <div>
+                            <label for="interviewer_id">Interviewer</label>
+                            <select name="interviewer_id" id="interviewer_id" required>
+                                @foreach(\App\Models\User::all() as $user)
+                                    <option value="{{ $user->id }}" {{ $interview->interviewer_id == $user->id ? 'selected' : '' }}>
+                                        {{ $user->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -53,6 +63,14 @@
                             <textarea name="notes" id="notes">{{ $interview->notes }}</textarea>
                         </div>
 
+                        <div>
+                            <label for="result">Résultat</label>
+                            <input type="text" name="result" id="result" value="{{ $interview->result }}">
+                        </div>
+                        <div>
+                            <label for="feedback">Feedback</label>
+                            <textarea name="feedback" id="feedback">{{ $interview->feedback }}</textarea>
+                        </div>
                         <button type="submit">Modifier</button>
                     </form>
                 </div>

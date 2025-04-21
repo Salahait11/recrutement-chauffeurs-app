@@ -17,7 +17,9 @@ class InterviewController extends Controller
      */
     public function index()
     {
-        $interviews = Interview::all();
+        $interviews = Interview::with(['candidate', 'scheduler','interviewer'])
+        ->get();
+
         return view('interviews.index', compact('interviews'));
     }
 
@@ -38,7 +40,9 @@ class InterviewController extends Controller
             'candidate_id' => 'required|exists:candidates,id',
             'interview_date' => 'required|date|after:today',
             'type' => 'required|in:initial,technique,final',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
+            'interviewer_id' => 'nullable|exists:users,id',
+
         ]);
         $interview = new Interview($validatedData);
         $interview->scheduler_id = auth()->id();
@@ -64,7 +68,10 @@ class InterviewController extends Controller
             'candidate_id' => 'required|exists:candidates,id',
             'interview_date' => 'required|date|after:today',
             'type' => 'required|in:initial,technique,final',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
+            'interviewer_id' => 'nullable|exists:users,id',
+            'result' => 'nullable|string',
+            'feedback' => 'nullable|string',
         ]);
         $interview->update($validatedData);
 

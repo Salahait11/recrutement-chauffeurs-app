@@ -19,6 +19,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Candidat</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Interviewer</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Planificateur</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
@@ -29,15 +30,16 @@
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($interview->interview_date)->format('d/m/Y') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $interview->type }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $interview->candidate->fullname }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $interview->scheduler->name }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ $interview->candidate->getFullName() }}</td>
+                                     <td class="px-6 py-4 whitespace-nowrap">{{ $interview->interviewer->name }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ $interview->scheduler->name}}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $interview->status }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <a href="{{ route('interviews.edit', $interview) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-2">{{ __('Modifier') }}</a>
                                         <form action="{{ route('interviews.destroy', $interview) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">{{ __('Supprimer') }}</button>
+                                            <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">{{ __('Supprimer') }}</button>                         
                                         </form>
                                     </td>
                                 </tr>
