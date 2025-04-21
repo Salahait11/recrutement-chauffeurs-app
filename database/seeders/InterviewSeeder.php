@@ -22,17 +22,21 @@ class InterviewSeeder extends Seeder
         $userIds = User::pluck('id')->toArray();
 
         for ($i = 0; $i < 20; $i++) {
-            Interview::create([
-                'candidate_id' => $faker->randomElement($candidateIds),
-                'scheduler_id' => $faker->randomElement($userIds),
-                'interviewer_id' => $faker->randomElement($userIds),
-                'interview_date' => $faker->dateTimeBetween('-1 year', '+1 year'),
-                'type' => $faker->randomElement(['initial', 'technique', 'final']),
-                'notes' => $faker->optional()->text,
-                'status' => $faker->randomElement(['planifié', 'terminé', 'annulé']),
-                'result' => $faker->optional()->text,
-                'feedback' => $faker->optional()->text,
-            ]);
+            $candidateId = $faker->randomElement($candidateIds);
+            $interviewDate = $faker->dateTimeBetween('-1 year', '+1 year');
+
+            Interview::updateOrCreate(
+                ['candidate_id' => $candidateId, 'interview_date' => $interviewDate],
+                [
+                    'scheduler_id' => $faker->randomElement($userIds),
+                    'interviewer_id' => $faker->randomElement($userIds),
+                    'type' => $faker->randomElement(['initial', 'technique', 'final']),
+                    'notes' => $faker->optional()->text,
+                    'status' => $faker->randomElement(['planifié', 'terminé', 'annulé']),
+                    'result' => $faker->optional()->text,
+                    'feedback' => $faker->optional()->text,
+                ]
+            );
         }
     }
 }

@@ -15,7 +15,6 @@ return new class extends Migration
         Schema::create('interviews', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('candidate_id')->nullable()->index();
-            $table->unsignedBigInteger('scheduler_id')->nullable()->index();
             $table->unsignedBigInteger('interviewer_id')->nullable();
             $table->dateTime('interview_date')->nullable();
             $table->string('type')->nullable();
@@ -24,9 +23,10 @@ return new class extends Migration
             $table->text('result')->nullable();
             $table->text('feedback')->nullable();
             $table->timestamps();
+            $table->unsignedBigInteger('scheduler_id')->nullable()->index();
 
             $table->foreign('candidate_id')->references('id')->on('candidates')->onDelete('set null');
-            $table->foreign('scheduler_id')->references('id')->on('users')->onDelete('cascade');
+           $table->foreign('scheduler_id')->references('id')->on('users')->onDelete('set null');
             $table->foreign('interviewer_id')->references('id')->on('users')->onDelete('set null');
         });
     }
