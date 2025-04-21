@@ -37,7 +37,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Entretiens & Evaluations liées
     Route::resource('interviews', InterviewController::class);
-    Route::get('/interviews/{interview}/evaluations/create', [EvaluationController::class, 'createForInterview'])->name('interviews.evaluations.create');
 
     // Tests Conduite & Evaluations liées
     Route::resource('driving-tests', DrivingTestController::class);
