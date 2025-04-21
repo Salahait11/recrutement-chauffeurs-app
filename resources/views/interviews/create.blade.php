@@ -10,16 +10,40 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <form action="{{ route('interviews.store') }}" method="POST">
+                        
                         @csrf
+
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <ul>
+                                    @foreach ($errors->all() as $error)
+                                        <li class="text-red-500">{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <div>
+                            <label for="candidate_id">Candidat</label>
+                            <select name="candidate_id" id="candidate_id">
+                                @foreach(\App\Models\Candidate::all() as $candidate)
+                                    <option value="{{ $candidate->id }}">{{ $candidate->first_name }} {{ $candidate->last_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                         <div>
                             <label for="interview_date">Date de l'entretien</label>
                             <input type="datetime-local" name="interview_date" id="interview_date">
                         </div>
                         <div>
                             <label for="type">Type</label>
-                            <input type="text" name="type" id="type">
+                            <select name="type" id="type">
+                                <option value="initial">Initial</option>
+                                <option value="technique">Technique</option>
+                                <option value="final">Final</option>
+                            </select>
                         </div>
-                        <div>
+                       <div>
                             <label for="notes">Notes</label>
                             <textarea name="notes" id="notes"></textarea>
                         </div>

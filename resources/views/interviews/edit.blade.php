@@ -13,17 +13,44 @@
                         @csrf
                         @method('PUT')
 
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <ul>
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <div>
-                            <label for="interview_date">Date de l'entretien</label>
-                            <input type="datetime-local" name="interview_date" id="interview_date" required>
+                            <label for="candidate_id">Candidat</label>
+                            <select name="candidate_id" id="candidate_id" required>
+                                @foreach(\App\Models\Candidate::all() as $candidate)
+                                    <option value="{{ $candidate->id }}" {{ $interview->candidate_id == $candidate->id ? 'selected' : '' }}>
+                                        {{ $candidate->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
+
+                        <div>
+                            <label for="interview_date">Date et heure de l'entretien</label>
+                            <input type="datetime-local" name="interview_date" id="interview_date" value="{{ \Carbon\Carbon::parse($interview->interview_date)->format('Y-m-d\TH:i') }}" required>
+                        </div>
+
                         <div>
                             <label for="type">Type</label>
-                            <input type="text" name="type" id="type" required>
+                            <select name="type" id="type" required>
+                                <option value="initial" {{ $interview->type == 'initial' ? 'selected' : '' }}>initial</option>
+                                <option value="technique" {{ $interview->type == 'technique' ? 'selected' : '' }}>technique</option>
+                                <option value="final" {{ $interview->type == 'final' ? 'selected' : '' }}>final</option>
+                            </select>
                         </div>
+
                         <div>
                             <label for="notes">Notes</label>
-                            <textarea name="notes" id="notes"></textarea>
+                            <textarea name="notes" id="notes">{{ $interview->notes }}</textarea>
                         </div>
 
                         <button type="submit">Modifier</button>

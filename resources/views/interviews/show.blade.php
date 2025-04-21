@@ -9,6 +9,8 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <p><strong>Candidate:</strong> {{ $interview->candidate->name }}</p>
+                    <p><strong>Scheduler:</strong> {{ $interview->scheduler->name }}</p>
                     <p><strong>Date:</strong> {{ $interview->interview_date }}</p>
                     <p><strong>Type:</strong> {{ $interview->type }}</p>
                     <p><strong>Notes:</strong> {{ $interview->notes }}</p>
