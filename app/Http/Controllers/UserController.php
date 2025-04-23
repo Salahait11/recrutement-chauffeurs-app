@@ -19,7 +19,7 @@ class UserController extends Controller
     /** Display a listing of users. */
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::query()->where('role', 'admin');
 
         // Filtre de recherche
         if ($request->has('search')) {
@@ -28,11 +28,6 @@ class UserController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
             });
-        }
-
-        // Filtre par rôle
-        if ($request->has('role') && $request->input('role') !== '') {
-            $query->where('role', $request->input('role'));
         }
 
         // Filtre par statut
@@ -46,7 +41,7 @@ class UserController extends Controller
         $query->orderBy($sort, $direction);
 
         $users = $query->paginate(15);
-        $roles = ['admin', 'manager', 'employee', 'candidate'];
+        $roles = ['admin']; // Seul le rôle admin est disponible
 
         return view('admin.users.index', compact('users', 'roles'));
     }
@@ -54,7 +49,7 @@ class UserController extends Controller
     /** Show the form for creating a new user */
     public function create()
     {
-         $roles = ['admin', 'employee']; // Rôles que l'admin peut créer
+         $roles = ['manager', 'candidate']; // Exclure 'admin' des rôles disponibles
          // Utilise la vue dans le sous-dossier 'admin/users'
          return view('admin.users.create', compact('roles'));
     }
@@ -65,7 +60,7 @@ class UserController extends Controller
          $validatedData = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'role' => ['required', 'string', Rule::in(['admin', 'employee'])], // Rôles permis
+            'role' => ['required', 'string', Rule::in(['manager', 'candidate'])], // Rôles permis
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 

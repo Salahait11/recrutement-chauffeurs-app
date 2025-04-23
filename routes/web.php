@@ -25,6 +25,9 @@ Route::get('/', function () {
 
 // Route PDF test
 Route::get('/interviews/pdf', [InterviewController::class, 'generatePdf'])->name('interviews.pdf');
+Route::get('/employees/pdf', [EmployeeController::class, 'generatePdf'])->name('employees.pdf');
+Route::get('/employees/{employee}/pdf', [EmployeeController::class, 'downloadEmployeePdf'])->name('employees.single.pdf');
+Route::get('/admin/absences/pdf', [AbsenceController::class, 'generatePdf'])->name('admin.absences.pdf');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']) 
@@ -59,7 +62,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('offers.update-status');
     Route::get('/offers/{offer}/pdf', [OfferController::class, 'downloadOfferPdf'])->name('offers.pdf');
 
-    Route::get('/employees/{employee}/pdf', [EmployeeController::class, 'downloadEmployeePdf'])->name('employees.pdf');
     Route::resource('employees', EmployeeController::class);
 
     // Demandes de Congé

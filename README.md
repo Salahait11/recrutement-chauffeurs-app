@@ -1,99 +1,206 @@
-# HRM System (Laravel)
+# Système de Gestion de Recrutement de Chauffeurs
 
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## Table des Matières
+1. [Introduction](#introduction)
+2. [Installation](#installation)
+3. [Structure du Projet](#structure-du-projet)
+4. [Fonctionnalités](#fonctionnalités)
+5. [Guide d'Utilisation](#guide-dutilisation)
+6. [Technologies Utilisées](#technologies-utilisées)
+7. [Sécurité](#sécurité)
+8. [Dépannage](#dépannage)
 
-## About This Project
+## Introduction
 
-This project is a Human Resources Management (HRM) system built with the Laravel framework. It aims to streamline various HR processes, including recruitment, employee management, leave tracking, and performance evaluation.
+Ce projet est un système de gestion de recrutement de chauffeurs développé avec Laravel. Il permet de gérer le processus complet de recrutement, depuis la candidature jusqu'à l'embauche, ainsi que la gestion des employés et de leurs absences.
 
-## Features
+### Objectifs
+- Gérer le processus de recrutement des chauffeurs
+- Suivre les candidatures et les entretiens
+- Gérer les employés et leurs documents
+- Suivre les absences et les justifications
+- Générer des rapports PDF
 
-Based on the project structure, the application includes functionalities for managing:
+## Installation
 
-*   **Candidates:** Tracking applicants through the recruitment process (creating, viewing, editing, status updates).
-*   **Interviews:** Scheduling and managing interviews with candidates.
-*   **Evaluations:** Conducting evaluations (possibly for interviews or performance reviews) using predefined criteria.
-*   **Driving Tests:** Managing driving tests for candidates or employees (relevant if the company involves driving roles).
-*   **Offers:** Creating and managing job offers for successful candidates.
-*   **Employees:** Maintaining employee records.
-*   **Leave Management:** Handling leave types and employee leave requests.
-*   **Absences:** Tracking employee absences.
-*   **Vehicles:** Managing company vehicles (possibly assigned to employees).
-*   **Documents:** Storing relevant documents for candidates or employees.
-*   **Users & Roles:** Managing application users and their permissions (using spatie/laravel-permission).
-*   **Reporting:** Generating reports (basic reporting structure exists).
-*   **Calendar View:** Likely for visualizing schedules (interviews, leaves, etc.).
+### Prérequis
+- PHP 8.1 ou supérieur
+- Composer
+- MySQL 5.7 ou supérieur
+- Node.js et NPM
 
-## Built With
+### Étapes d'Installation
 
-*   [Laravel](https://laravel.com/) - The PHP framework used.
-*   PHP
-*   MySQL (or other configured database)
-*   [Tailwind CSS](https://tailwindcss.com/) - Frontend styling.
-*   [Vite](https://vitejs.dev/) - Frontend build tool.
-*   [Spatie Laravel Permission](https://spatie.be/docs/laravel-permission/v6/introduction) - For roles and permissions.
-*   [Chart.js](https://www.chartjs.org/) - For rendering charts (likely in reports/dashboard).
-*   [DOMPDF](https://github.com/dompdf/dompdf) - For generating PDFs (e.g., offer letters, reports).
+1. Cloner le projet
+```bash
+git clone [url-du-projet]
+cd recrutement-chauffeurs-app
+```
 
-## Getting Started
+2. Installer les dépendances PHP
+```bash
+composer install
+```
 
-### Prerequisites
+3. Installer les dépendances JavaScript
+```bash
+npm install
+```
 
-*   PHP (Check `composer.json` for specific version requirements)
-*   Composer
-*   Node.js & npm (or yarn)
-*   A database server (e.g., MySQL, PostgreSQL)
+4. Copier le fichier .env
+```bash
+cp .env.example .env
+```
 
-### Installation
+5. Configurer la base de données dans .env
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=nom_de_la_base
+DB_USERNAME=utilisateur
+DB_PASSWORD=mot_de_passe
+```
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <your-repository-url>
-    cd <project-directory>
-    ```
-2.  **Install PHP dependencies:**
-    ```bash
-    composer install
-    ```
-3.  **Install Node.js dependencies:**
-    ```bash
-    npm install
-    npm run build
-    ```
-4.  **Copy environment file:**
-    ```bash
-    cp .env.example .env
-    ```
-5.  **Generate application key:**
-    ```bash
-    php artisan key:generate
-    ```
-6.  **Configure your `.env` file:**
-    *   Set database connection details (`DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`).
-    *   Configure mail settings if needed.
-7.  **Run database migrations:**
-    ```bash
-    php artisan migrate
-    ```
-8.  **(Optional) Seed the database:**
-    *   The project includes seeders for Admin User, Evaluation Criteria, Leave Types, and Vehicles.
-    ```bash
-    php artisan db:seed
-    # or php artisan db:seed --class=SpecificSeederClass
-    ```
+6. Générer la clé d'application
+```bash
+php artisan key:generate
+```
 
-### Running the Application
+7. Exécuter les migrations
+```bash
+php artisan migrate
+```
 
+8. Lancer le serveur
 ```bash
 php artisan serve
 ```
 
-Visit `http://127.0.0.1:8000` (or the specified address) in your browser.
+## Structure du Projet
 
-## Security Vulnerabilities
+```
+app/
+├── Http/
+│   ├── Controllers/
+│   │   ├── Admin/
+│   │   ├── Auth/
+│   │   └── ...
+│   └── Middleware/
+├── Models/
+├── Services/
+└── ...
 
-If you discover a security vulnerability within this project, please follow Laravel's guidelines and send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com).
+resources/
+├── views/
+│   ├── admin/
+│   ├── auth/
+│   └── ...
+└── ...
 
-## License
+routes/
+├── web.php
+└── ...
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT). This project builds upon it.
+database/
+├── migrations/
+└── ...
+```
+
+## Fonctionnalités
+
+### 1. Gestion des Utilisateurs
+- Création et gestion des comptes utilisateurs
+- Attribution des rôles (admin, manager, employee, candidate)
+- Interface d'administration des utilisateurs
+- Filtrage et recherche des utilisateurs
+
+### 2. Gestion des Candidats
+- Suivi des candidatures
+- Gestion des entretiens
+- Tests de conduite
+- Processus de recrutement
+
+### 3. Gestion des Employés
+- Création et modification des profils
+- Gestion des documents
+- Suivi des informations professionnelles
+- Génération de PDF
+
+### 4. Gestion des Absences
+- Enregistrement des absences
+- Justification des absences
+- Suivi des congés
+- Génération de rapports
+
+## Guide d'Utilisation
+
+### Connexion
+1. Accédez à `/login`
+2. Entrez vos identifiants
+3. Selon votre rôle, vous aurez accès à différentes fonctionnalités
+
+### Administration
+1. Accédez au tableau de bord
+2. Utilisez le menu de navigation
+3. Gérez les utilisateurs, candidats, employés et absences
+
+### Gestion des Documents
+1. Accédez à la section Documents
+2. Téléchargez ou consultez les documents
+3. Générez des PDF si nécessaire
+
+## Technologies Utilisées
+
+- **Backend**
+  - Laravel 10.x
+  - PHP 8.1+
+  - MySQL
+
+- **Frontend**
+  - Tailwind CSS
+  - JavaScript
+  - Blade Templates
+
+- **Outils**
+  - Composer
+  - NPM
+  - Git
+
+## Sécurité
+
+### Mesures de Sécurité Implémentées
+- Authentification sécurisée
+- Protection CSRF
+- Validation des données
+- Gestion des rôles et permissions
+- Protection des routes
+
+### Bonnes Pratiques
+- Utilisation de mots de passe forts
+- Limitation des tentatives de connexion
+- Validation des entrées utilisateur
+- Protection des fichiers sensibles
+
+## Dépannage
+
+### Problèmes Courants
+
+1. **Erreur de Connexion à la Base de Données**
+   - Vérifier les paramètres dans .env
+   - S'assurer que MySQL est en cours d'exécution
+
+2. **Problèmes de Permissions**
+   - Vérifier les permissions des dossiers storage et bootstrap/cache
+   - Exécuter `php artisan storage:link`
+
+3. **Erreurs 404**
+   - Vérifier les routes dans routes/web.php
+   - S'assurer que les contrôleurs existent
+
+### Contact Support
+Pour toute assistance supplémentaire, contactez l'administrateur système.
+
+## Licence
+
+Ce projet est sous licence [MIT](LICENSE).

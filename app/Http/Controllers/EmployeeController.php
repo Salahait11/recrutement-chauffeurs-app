@@ -347,4 +347,46 @@ class EmployeeController extends Controller
              return Redirect::back()->with('error', 'Erreur lors de la génération du PDF.');
          }
     }
+
+    public function generatePdf(Request $request)
+    {
+        try {
+            $query = Employee::with(['user']);
+
+            // Initialiser les filtres
+            $filters = [];
+
+            if ($request->filled('department')) {
+                $query->where('department', $request->input('department'));
+                $filters['department'] = $request->input('department');
+            }
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->input('status'));
+                $filters['status'] = $request->input('status');
+            }
+
+            if ($request->filled('date_from')) {
+                $query->where('hire_date', '>=', $request->input('date_from'));
+                $filters['date_from'] = $request->input('date_from');
+            }
+
+            if ($request->filled('date_to')) {
+                $query->where('hire_date', '<=', $request->input('date_to'));
+                $filters['date_to'] = $request->input('date_to');
+            }
+
+            $employees = $query->orderBy('hire_date', 'desc')->get();
+
+            $pdf = Pdf::loadView('employees.pdf', [
+                'employees' => $employees,
+                'filters' => $filters
+            ]);
+
+            return $pdf->download('liste-employes.pdf');
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de la génération du PDF des employés : ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la génération du PDF.');
+        }
+    }
 }

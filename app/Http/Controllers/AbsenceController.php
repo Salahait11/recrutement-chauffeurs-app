@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AbsenceController extends Controller
 {
@@ -125,5 +126,47 @@ class AbsenceController extends Controller
              Log::error("Erreur suppression absence ID {$absence->id}: " . $e->getMessage());
              return Redirect::route('admin.absences.index')->with('error', 'Erreur suppression absence.');
          }
+    }
+
+    public function generatePdf(Request $request)
+    {
+        try {
+            $query = Absence::with(['employee.user', 'recorder']);
+
+            // Initialiser les filtres
+            $filters = [];
+
+            if ($request->filled('employee_id')) {
+                $query->where('employee_id', $request->input('employee_id'));
+                $filters['employee_id'] = $request->input('employee_id');
+            }
+
+            if ($request->filled('date_from')) {
+                $query->where('absence_date', '>=', $request->input('date_from'));
+                $filters['date_from'] = $request->input('date_from');
+            }
+
+            if ($request->filled('date_to')) {
+                $query->where('absence_date', '<=', $request->input('date_to'));
+                $filters['date_to'] = $request->input('date_to');
+            }
+
+            if ($request->filled('is_justified')) {
+                $query->where('is_justified', $request->input('is_justified') === 'true');
+                $filters['is_justified'] = $request->input('is_justified') === 'true';
+            }
+
+            $absences = $query->orderBy('absence_date', 'desc')->get();
+
+            $pdf = Pdf::loadView('admin.absences.pdf', [
+                'absences' => $absences,
+                'filters' => $filters
+            ]);
+
+            return $pdf->download('liste-absences.pdf');
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de la génération du PDF des absences : ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la génération du PDF.');
+        }
     }
 }
