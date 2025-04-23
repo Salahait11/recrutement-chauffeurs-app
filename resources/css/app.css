@@ -1,3 +1,99 @@
+/* Importation des polices (si nécessaire - exemple avec Google Fonts) */
+/* Décommentez et adaptez si vous utilisez des polices personnalisées */
+/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'); */
+
+/* 1. Directives de base de Tailwind */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 2. Personnalisation via les @layer (Optionnel mais bonne pratique) */
+
+/* Styles de base globaux appliqués aux éléments HTML */
+@layer base {
+    body {
+        /* Appliquer des classes utilitaires Tailwind comme styles par défaut */
+        @apply font-sans antialiased text-gray-700 bg-gray-100 leading-normal;
+        /* font-sans suppose que vous avez défini 'sans' dans votre tailwind.config.js */
+        /* antialiased améliore le rendu des polices */
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-semibold text-gray-900 mb-3 leading-tight;
+         /* Styles de base pour les titres */
+    }
+    h1 { @apply text-3xl; }
+    h2 { @apply text-2xl; }
+    h3 { @apply text-xl; }
+    h4 { @apply text-lg; }
+
+    a {
+        @apply text-blue-600 hover:text-blue-800;
+        /* Styles de base pour les liens */
+        /* Vous pouvez ajouter 'underline' ici si vous voulez que tous les liens soient soulignés par défaut */
+    }
+
+    p {
+        @apply mb-4; /* Ajoute une marge en bas à tous les paragraphes */
+    }
+
+    /* Styles de base pour les listes */
+    ul, ol {
+        @apply list-inside mb-4;
+    }
+    ul {
+        @apply list-disc;
+    }
+    ol {
+        @apply list-decimal;
+    }
+    li {
+        @apply mb-1;
+    }
+
+    /* Ajoutez d'autres styles de base ici... */
+    /* Exemple: styles de base pour les tableaux, les formulaires (si non utilisé avec @tailwindcss/forms) */
+    /* table { ... } */
+    /* hr { @apply border-t border-gray-300 my-6; } */
+}
+
+/* Définition de classes de composants personnalisés (à utiliser avec parcimonie) */
+/* Préférez souvent les composants Blade pour encapsuler le markup ET les styles */
+@layer components {
+    /* Exemple: Une classe de bouton personnalisée réutilisable */
+    .btn {
+        @apply inline-block px-4 py-2 rounded font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150;
+    }
+    .btn-primary {
+        @apply btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+    }
+    .btn-secondary {
+        @apply btn bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500;
+    }
+    .btn-outline {
+        @apply btn bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-indigo-500;
+    }
+
+    /* Exemple: Une classe pour les cartes */
+    .card {
+      @apply bg-white rounded-lg shadow overflow-hidden border border-gray-200;
+    }
+    .card-body {
+      @apply p-4 md:p-6;
+    }
+    .card-title {
+      @apply text-lg font-semibold text-gray-800 mb-2;
+    }
+}
+
+/* 3. Styles spécifiques ou overrides (dernier recours) */
+/* Si vous avez absolument besoin d'écrire du CSS custom qui ne rentre pas
+   dans les couches 'base' ou 'components', ou qui doit surcharger
+   des utilitaires Tailwind, vous pouvez l'ajouter ici.
+   Essayez d'éviter cela autant que possible. */
+
+/* Exemple:
+.element-tres-specifique {
+    background-color: #ff00ff !important;
+}
+*/

@@ -42,12 +42,36 @@ class CandidateController extends Controller
 
         $candidates = $query->latest()->paginate(10);
 
-        return view('candidates.index', compact('candidates', 'statuses'));
+        return view('candidates.index', [
+            'candidates' => $candidates,
+            'statuses' => $statuses,
+            'statusLabels' => Candidate::$statuses
+        ]);
     }
 
     public function create()
     {
-        return view('candidates.create');
+        $statuses = [
+            'nouveau',
+            'contacte',
+            'entretien',
+            'test',
+            'offre',
+            'embauche',
+            'refuse'
+        ];
+
+        $statusLabels = [
+            'nouveau' => 'Nouveau',
+            'contacte' => 'Contacté',
+            'entretien' => 'En entretien',
+            'test' => 'En test',
+            'offre' => 'Offre envoyée',
+            'embauche' => 'Embauché',
+            'refuse' => 'Refusé'
+        ];
+
+        return view('candidates.create', compact('statuses', 'statusLabels'));
     }
 
    public function store(Request $request)
@@ -81,15 +105,52 @@ class CandidateController extends Controller
 
     public function show(Candidate $candidate)
     {
-        $candidate->load(['interviews', 'drivingTests', 'offers', 'documents']);
-        $statuses = Candidate::$statuses;
-        return view('candidates.show', compact('candidate', 'statuses'));
+        $statuses = [
+            'nouveau',
+            'contacte',
+            'entretien',
+            'test',
+            'offre',
+            'embauche',
+            'refuse'
+        ];
+
+        $statusLabels = [
+            'nouveau' => 'Nouveau',
+            'contacte' => 'Contacté',
+            'entretien' => 'En entretien',
+            'test' => 'En test',
+            'offre' => 'Offre envoyée',
+            'embauche' => 'Embauché',
+            'refuse' => 'Refusé'
+        ];
+
+        return view('candidates.show', compact('candidate', 'statuses', 'statusLabels'));
     }
 
     public function edit(Candidate $candidate)
     {
-        $statuses = Candidate::$statuses;
-        return view('candidates.edit', compact('candidate','statuses'));
+        $statuses = [
+            'nouveau',
+            'contacte',
+            'entretien',
+            'test',
+            'offre',
+            'embauche',
+            'refuse'
+        ];
+
+        $statusLabels = [
+            'nouveau' => 'Nouveau',
+            'contacte' => 'Contacté',
+            'entretien' => 'En entretien',
+            'test' => 'En test',
+            'offre' => 'Offre envoyée',
+            'embauche' => 'Embauché',
+            'refuse' => 'Refusé'
+        ];
+
+        return view('candidates.edit', compact('candidate', 'statuses', 'statusLabels'));
     }
 
    public function update(Request $request, Candidate $candidate)

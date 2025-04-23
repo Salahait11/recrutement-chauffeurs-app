@@ -1,171 +1,266 @@
 {{-- resources/views/driving_tests/edit.blade.php --}}
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Modifier Test Conduite :') }}
-            {{-- Gérer le cas où le candidat ou son nom/prénom est null --}}
-            {{ $drivingTest->candidate?->full_name ?? ($drivingTest->candidate?->first_name . ' ' . $drivingTest->candidate?->last_name) ?? 'Candidat inconnu' }}
-            du
-            {{-- Gérer le cas où la date est nulle --}}
-            {{ $drivingTest->test_date?->format('d/m/Y H:i') ?? 'Date inconnue' }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
+@section('content')
+<div class="space-y-6">
+    <!-- Messages Flash -->
+    @if (session('success'))
+        <div class="rounded-md bg-green-50 p-4 shadow-sm border border-green-200 dark:bg-green-900/20 dark:border-green-800">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-green-800 dark:text-green-300">{{ session('success') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+    @if (session('error'))
+         <div class="rounded-md bg-red-50 p-4 shadow-sm border border-red-200 dark:bg-red-900/20 dark:border-red-800">
+             <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-red-800 dark:text-red-300">{{ session('error') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
 
-                    {{-- Bloc d'affichage des erreurs de validation --}}
-                    @if ($errors->any())
-                        <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                            <strong class="font-bold">{{ __('Oups ! Il y a des erreurs.') }}</strong>
-                            <ul class="mt-2 list-disc list-inside text-sm">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
+    <!-- En-tête avec titre -->
+    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl rounded-lg border border-blue-100 dark:border-blue-800">
+        <div class="p-6">
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="min-w-0 flex-1">
+                    <h2 class="text-2xl font-bold leading-7 text-blue-800 dark:text-blue-300 sm:truncate sm:text-3xl sm:tracking-tight">
+                        <div class="flex items-center">
+                             <svg class="h-8 w-8 mr-3 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            Modifier le Test de Conduite
                         </div>
+                    </h2>
+                     {{-- Ajout conditionnel du nom du candidat et date --}}
+                    @if($drivingTest->candidate)
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Test de {{ $drivingTest->candidate->first_name }} {{ $drivingTest->candidate->last_name }} du {{ $drivingTest->test_date?->format('d/m/Y H:i') ?? 'Date inconnue' }}
+                    </p>
                     @endif
+                </div>
+                <div class="mt-4 flex md:ml-4 md:mt-0 space-x-3">
+                    {{-- Lien vers Show ou Index selon préférence --}}
+                    <a href="{{ route('driving-tests.show', $drivingTest->id) }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Retour aux détails
+                    </a>
+                    {{-- Le bouton Enregistrer est dans le formulaire en bas --}}
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    {{-- Bloc de message de succès/erreur de session --}}
-                    @if (session('success'))
-                        <div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-                    @if (session('error'))
-                         <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                             {{ session('error') }}
-                         </div>
-                    @endif
+    <!-- Formulaire -->
+    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl rounded-lg border border-blue-100 dark:border-blue-800">
+        <form action="{{ route('driving-tests.update', $drivingTest->id) }}" method="POST" class="p-6 space-y-6">
+            @csrf
+            @method('PUT')
 
+            <!-- Informations Générales -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-medium text-blue-800 dark:text-blue-300">Informations Générales</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {{-- Candidat --}}
+                    <div>
+                        <label for="candidate_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Candidat <span class="text-red-500">*</span></label>
+                        <select id="candidate_id" name="candidate_id" required
+                                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
+                            <option value="">-- {{ __('Sélectionner un candidat') }} --</option>
+                            @foreach($candidates as $candidate)
+                                <option value="{{ $candidate->id }}" @selected(old('candidate_id', $drivingTest->candidate_id) == $candidate->id)>
+                                    {{ $candidate->first_name }} {{ $candidate->last_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('candidate_id')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-                    <form method="POST" action="{{ route('driving-tests.update', $drivingTest->id) }}">
-                        @csrf {{-- Protection CSRF --}}
-                        @method('PUT') {{-- Méthode HTTP pour la mise à jour --}}
+                    {{-- Évaluateur --}}
+                    <div>
+                        <label for="evaluator_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Évaluateur <span class="text-red-500">*</span></label>
+                        <select id="evaluator_id" name="evaluator_id" required
+                                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
+                            <option value="">-- {{ __('Sélectionner un évaluateur') }} --</option>
+                            @foreach($evaluators as $evaluator)
+                                <option value="{{ $evaluator->id }}" @selected(old('evaluator_id', $drivingTest->evaluator_id) == $evaluator->id)>
+                                    {{ $evaluator->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('evaluator_id')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-                        <div class="space-y-6">
-                            {{-- Champ Candidat --}}
-                            <div>
-                                <x-input-label for="candidate_id" :value="__('Candidat')" /> <span class="text-red-500">*</span>
-                                <x-select-input id="candidate_id" name="candidate_id" class="block mt-1 w-full" required>
-                                    <option value="">-- {{ __('Sélectionner un candidat') }} --</option>
-                                    @foreach($candidates as $candidate)
-                                        <option value="{{ $candidate->id }}" @selected(old('candidate_id', $drivingTest->candidate_id) == $candidate->id)>
-                                            {{ $candidate->first_name }} {{ $candidate->last_name }}
-                                        </option>
-                                    @endforeach
-                                </x-select-input>
-                                <x-input-error :messages="$errors->get('candidate_id')" class="mt-2" />
-                            </div>
+                     {{-- Date et Heure --}}
+                    <div>
+                        <label for="test_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date et Heure du Test <span class="text-red-500">*</span></label>
+                        <input type="datetime-local" id="test_date" name="test_date" required
+                               value="{{ old('test_date', $drivingTest->test_date?->format('Y-m-d\TH:i')) }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
+                        @error('test_date')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-                            {{-- Champ Évaluateur --}}
-                            <div>
-                                <x-input-label for="evaluator_id" :value="__('Évaluateur')" /> <span class="text-red-500">*</span>
-                                <x-select-input id="evaluator_id" name="evaluator_id" class="block mt-1 w-full" required>
-                                    <option value="">-- {{ __('Sélectionner un évaluateur') }} --</option>
-                                    @foreach($evaluators as $evaluator)
-                                        <option value="{{ $evaluator->id }}" @selected(old('evaluator_id', $drivingTest->evaluator_id) == $evaluator->id)>
-                                            {{ $evaluator->name }}
-                                        </option>
-                                    @endforeach
-                                </x-select-input>
-                                <x-input-error :messages="$errors->get('evaluator_id')" class="mt-2" />
-                            </div>
+                    {{-- Véhicule (Optionnel) --}}
+                    <div>
+                        <label for="vehicle_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Véhicule Utilisé</label>
+                        <select id="vehicle_id" name="vehicle_id"
+                                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
+                            <option value="">-- {{ __('Sélectionner un véhicule') }} --</option>
+                            @foreach($vehicles as $vehicle)
+                                <option value="{{ $vehicle->id }}" @selected(old('vehicle_id', $drivingTest->vehicle_id) == $vehicle->id)>
+                                    {{ $vehicle->brand }} {{ $vehicle->model }} ({{ $vehicle->plate_number }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('vehicle_id')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+                 {{-- Itinéraire / Détails --}}
+                <div>
+                    <label for="route_details" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Itinéraire / Conditions Spécifiques</label>
+                    <textarea id="route_details" name="route_details" rows="3"
+                              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm"
+                              >{{ old('route_details', $drivingTest->route_details) }}</textarea>
+                    @error('route_details')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
 
-                             {{-- Champ Véhicule --}}
-                            <div>
-                                <x-input-label for="vehicle_id" :value="__('Véhicule Utilisé')" />
-                                <x-select-input id="vehicle_id" name="vehicle_id" class="block mt-1 w-full">
-                                    <option value="">-- {{ __('Sélectionner un véhicule (Optionnel)') }} --</option>
-                                    @foreach($vehicles as $vehicle)
-                                        <option value="{{ $vehicle->id }}" @selected(old('vehicle_id', $drivingTest->vehicle_id) == $vehicle->id)>
-                                            {{ $vehicle->brand }} {{ $vehicle->model }} ({{ $vehicle->plate_number }})
-                                        </option>
-                                    @endforeach
-                                </x-select-input>
-                                <x-input-error :messages="$errors->get('vehicle_id')" class="mt-2" />
-                            </div>
+             <hr class="dark:border-gray-700 my-4">
 
-                            {{-- Champ Date et Heure --}}
-                            <div>
-                                <x-input-label for="test_date" :value="__('Date et Heure du Test')" /> <span class="text-red-500">*</span>
-                                <x-text-input id="test_date" name="test_date" type="datetime-local" class="block mt-1 w-full"
-                                              :value="old('test_date', $drivingTest->test_date?->format('Y-m-d\TH:i'))" required />
-                                <x-input-error :messages="$errors->get('test_date')" class="mt-2" />
-                            </div>
+            <!-- Résultats du Test -->
+             <div class="space-y-4">
+                <h3 class="text-lg font-medium text-blue-800 dark:text-blue-300">Résultats du Test</h3>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {{-- Statut --}}
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Statut <span class="text-red-500">*</span></label>
+                        <select id="status" name="status" required
+                                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
+                            <option value="planifie" @selected(old('status', $drivingTest->status) === 'planifie')>{{ __('Planifié') }}</option>
+                            <option value="reussi" @selected(old('status', $drivingTest->status) === 'reussi')>{{ __('Réussi') }}</option>
+                            <option value="echoue" @selected(old('status', $drivingTest->status) === 'echoue')>{{ __('Échoué') }}</option>
+                            <option value="annule" @selected(old('status', $drivingTest->status) === 'annule')>{{ __('Annulé') }}</option>
+                        </select>
+                        @error('status')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-                            {{-- Champ Itinéraire / Conditions --}}
-                            <div>
-                                <x-input-label for="route_details" :value="__('Itinéraire / Conditions Spécifiques')" />
-                                <textarea id="route_details" name="route_details" rows="3"
-                                          class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                                          >{{ old('route_details', $drivingTest->route_details) }}</textarea>
-                                <x-input-error :messages="$errors->get('route_details')" class="mt-2" />
-                            </div>
+                    {{-- Score --}}
+                    <div>
+                        <label for="score" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Score (sur 100)</label>
+                        <input type="number" id="score" name="score" min="0" max="100" value="{{ old('score', $drivingTest->score) }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
+                        @error('score')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-                            <hr class="dark:border-gray-700 my-4"> {{-- Séparateur visuel --}}
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ __('Résultats du Test') }}</h3>
+                    {{-- Résultat (Passed) --}}
+                    <div>
+                        <label for="passed" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Résultat Final</label>
+                        <select id="passed" name="passed"
+                                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
+                            <option value="" @selected(old('passed', $drivingTest->passed) === null || old('passed', $drivingTest->passed) === '')>-- {{ __('Non défini / Non applicable') }} --</option>
+                            <option value="1" @selected(old('passed', $drivingTest->passed) === true || old('passed', $drivingTest->passed) === '1')>{{ __('Réussi') }}</option>
+                            <option value="0" @selected((old('passed', $drivingTest->passed) === false || old('passed', $drivingTest->passed) === '0') && old('passed', $drivingTest->passed) !== null && old('passed', $drivingTest->passed) !== '')>{{ __('Échoué') }}</option>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ __("Seulement pertinent si statut = 'Terminé', 'Réussi' ou 'Échoué'.") }}</p>
+                        @error('passed')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+                 </div>
 
-                            {{-- Champ Statut --}}
-                            <div>
-                                <x-input-label for="status" :value="__('Statut du Test')" /> <span class="text-red-500">*</span>
-                                {{-- $statuses contient ['scheduled', 'completed', 'canceled'] --}}
-                                <x-select-input id="status" name="status" class="block mt-1 w-full" required>
-                                    @foreach($statuses as $statusValue)
-                                        <option value="{{ $statusValue }}" @selected(old('status', $drivingTest->status) == $statusValue)>
-                                            {{-- Affichage conditionnel du libellé --}}
-                                            @if($statusValue === \App\Models\DrivingTest::STATUS_SCHEDULED) {{ __('Planifié') }}
-                                            @elseif($statusValue === \App\Models\DrivingTest::STATUS_COMPLETED) {{ __('Terminé') }}
-                                            @elseif($statusValue === \App\Models\DrivingTest::STATUS_CANCELED) {{ __('Annulé') }}
-                                            @else {{ ucfirst($statusValue) }} {{-- Fallback --}}
-                                            @endif
-                                        </option>
-                                    @endforeach
-                                </x-select-input>
-                                <x-input-error :messages="$errors->get('status')" class="mt-2" />
-                            </div>
+                {{-- Résumé des Résultats / Commentaires --}}
+                <div>
+                    <label for="results_summary" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Résumé des Résultats / Commentaires</label>
+                    <textarea id="results_summary" name="results_summary" rows="4"
+                              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">{{ old('results_summary', $drivingTest->results_summary) }}</textarea>
+                    @error('results_summary')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
 
-                             {{-- Champ Résultat (Passed) - Conditionnel au statut 'completed' --}}
-                            <div>
-                                <x-input-label for="passed" :value="__('Résultat (si statut = Terminé)')" />
-                                {{-- 'passed' est booléen (true/1, false/0) ou null --}}
-                                <x-select-input id="passed" name="passed" class="block mt-1 w-full">
-                                    <option value="">-- {{ __('Non applicable ou non défini') }} --</option>
-                                    {{-- Comparaison stricte pour true/'1' --}}
-                                    <option value="1" @selected(old('passed', $drivingTest->passed) === true || old('passed', $drivingTest->passed) === '1')>{{ __('Réussi') }}</option>
-                                    {{-- Comparaison stricte pour false/'0', en excluant null --}}
-                                    <option value="0" @selected((old('passed', $drivingTest->passed) === false || old('passed', $drivingTest->passed) === '0') && old('passed', $drivingTest->passed) !== null)>{{ __('Échoué') }}</option>
-                                </x-select-input>
-                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ __("Ce champ n'est pertinent que si le statut est 'Terminé'. Il sera ignoré sinon.") }}</p>
-                                <x-input-error :messages="$errors->get('passed')" class="mt-2" />
-                            </div>
+                {{-- Recommandations --}}
+                <div>
+                    <label for="recommendations" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Recommandations</label>
+                    <textarea id="recommendations" name="recommendations" rows="4"
+                              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">{{ old('recommendations', $drivingTest->recommendations) }}</textarea>
+                    @error('recommendations')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+             </div>
 
-                            {{-- Champ Résumé des Résultats / Commentaires --}}
-                            <div>
-                                <x-input-label for="results_summary" :value="__('Résumé des Résultats / Commentaires')" />
-                                <textarea id="results_summary" name="results_summary" rows="4"
-                                          class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                                          >{{ old('results_summary', $drivingTest->results_summary) }}</textarea>
-                                <x-input-error :messages="$errors->get('results_summary')" class="mt-2" />
-                            </div>
+            <!-- Boutons d'action -->
+            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                {{-- Lien Annuler vers la page Show --}}
+                 <a href="{{ route('driving-tests.show', $drivingTest->id) }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                    Annuler
+                </a>
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                    <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                    </svg>
+                    Enregistrer les modifications
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
 
-                        </div> {{-- Fin de space-y-6 --}}
+{{-- Script pour la gestion des champs conditionnels --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusSelect = document.getElementById('status');
+        const scoreInput = document.getElementById('score');
+        const passedSelect = document.getElementById('passed');
 
-                        {{-- Section des boutons --}}
-                        <div class="flex items-center justify-end mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                            <a href="{{ route('driving-tests.show', $drivingTest->id) }}" class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 mr-4">
-                                {{ __('Annuler') }}
-                            </a>
+        function updateFields() {
+            const status = statusSelect.value;
+            const showResults = ['completed', 'reussi', 'echoue'].includes(status);
+            
+            // Mettre à jour la visibilité et l'obligation des champs
+            if (scoreInput) {
+                scoreInput.required = showResults;
+            }
+            if (passedSelect) {
+                passedSelect.required = showResults;
+            }
+        }
 
-                            <x-primary-button>
-                                {{ __('Mettre à Jour le Test') }}
-                            </x-primary-button>
-                        </div>
-                    </form>
-                </div> {{-- Fin de p-6 --}}
-            </div> {{-- Fin de bg-white --}}
-        </div> {{-- Fin de max-w-4xl --}}
-    </div> {{-- Fin de py-12 --}}
-</x-app-layout>
+        // Écouter les changements de statut
+        statusSelect.addEventListener('change', updateFields);
+        
+        // Initialiser l'état des champs
+        updateFields();
+    });
+</script>

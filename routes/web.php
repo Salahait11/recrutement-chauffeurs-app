@@ -17,10 +17,11 @@ use App\Http\Controllers\AbsenceController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\EvaluationCriterionController;
+use App\Http\Controllers\CompanySettingController;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('welcome');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']) 
@@ -37,18 +38,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Entretiens & Evaluations liées
     Route::resource('interviews', InterviewController::class);
+    Route::patch('/interviews/{interview}/update-status', [InterviewController::class, 'updateStatus'])
+        ->name('interviews.update-status');
+    Route::post('/interviews/{interview}/cancel', [InterviewController::class, 'cancel'])->name('interviews.cancel');
 
     // Tests Conduite & Evaluations liées
     Route::resource('driving-tests', DrivingTestController::class);
-    Route::get('/driving-tests/{drivingTest}/evaluations/create', [EvaluationController::class, 'createForDrivingTest'])->name('driving-tests.evaluations.create');
 
     // Evaluations
     Route::resource('evaluations', EvaluationController::class);
 
     // Offres
     Route::resource('offers', OfferController::class);
-    Route::get('/offers/create/candidate/{candidate}', [OfferController::class, 'createForCandidate'])
-        ->name('offers.create-for-candidate');
+    Route::get('offers/create-for-candidate/{candidate}', [OfferController::class, 'createForCandidate'])->name('offers.createForCandidate');
     Route::post('/offers/{offer}/update-status', [OfferController::class, 'updateStatus'])
         ->name('offers.update-status');
     Route::get('/offers/{offer}/pdf', [OfferController::class, 'downloadOfferPdf'])->name('offers.pdf');
@@ -61,6 +63,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/calendar', [LeaveRequestController::class, 'calendar'])->name('calendar.index');
      Route::get('/leave-events', [LeaveRequestController::class, 'getLeaveEvents'])
           ->name('leave-requests.events');
+
+    // Routes pour les évaluations
+    Route::get('/interviews/{interview}/evaluations/create', [EvaluationController::class, 'createForInterview'])->name('interviews.evaluations.create');
+    Route::post('/interviews/{interview}/evaluations', [EvaluationController::class, 'store'])->name('interviews.evaluations.store');
+    Route::get('/driving-tests/{drivingTest}/evaluations/create', [EvaluationController::class, 'createForDrivingTest'])->name('driving-tests.evaluations.create');
+    Route::post('/driving-tests/{drivingTest}/evaluations', [EvaluationController::class, 'storeForDrivingTest'])->name('driving-tests.evaluations.store');
+    Route::get('/evaluations/{evaluation}', [EvaluationController::class, 'show'])->name('evaluations.show');
+    Route::get('/evaluations/{evaluation}/edit', [EvaluationController::class, 'edit'])->name('evaluations.edit');
+    Route::put('/evaluations/{evaluation}', [EvaluationController::class, 'update'])->name('evaluations.update');
+    Route::delete('/evaluations/{evaluation}', [EvaluationController::class, 'destroy'])->name('evaluations.destroy');
 
     // --- Paramètres (Accès Restreint) ---
 
@@ -75,6 +87,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('users', UserController::class)
               ->except(['show']); // On garde create/store, on enlève show qui redirige vers edit
 
+        // Gestion des paramètres de l'entreprise
+        Route::get('/settings/company', [CompanySettingController::class, 'index'])->name('settings.company');
+        Route::put('/settings/company', [CompanySettingController::class, 'update'])->name('settings.company.update');
+
       Route::resource('absences', AbsenceController::class);
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index'); 
      Route::resource('vehicles', VehicleController::class);
@@ -86,5 +102,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
 }); // Fin groupe auth
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/company-settings', [CompanySettingController::class, 'edit'])->name('company-settings.edit');
+    Route::put('/company-settings', [CompanySettingController::class, 'update'])->name('company-settings.update');
+});
 
 require __DIR__.'/auth.php';

@@ -23,11 +23,13 @@ return new class extends Migration
     $table->dateTime('test_date');
     // Itinéraire ou conditions spécifiques
     $table->text('route_details')->nullable();
-    // Statut du test (similaire aux entretiens)
-    $table->enum('status', ['scheduled', 'completed', 'canceled'])->default('scheduled');
-    // Résultat global (Succès/Échec) - Peut-être redondant avec l'évaluation ? Mettons-le pour l'instant.
-    $table->boolean('passed')->nullable(); // true = succès, false = échec, null = pas encore terminé/évalué
-    // Commentaires / Résultats détaillés (lié à l'évaluation ?)
+    // Statut du test
+    $table->enum('status', ['planifie', 'reussi', 'echoue', 'annule'])->default('planifie');
+    // Score du test (sur 100)
+    $table->integer('score')->nullable();
+    // Résultat global (Succès/Échec)
+    $table->boolean('passed')->nullable();
+    // Commentaires / Résultats détaillés
     $table->text('results_summary')->nullable();
     $table->timestamps();
 });

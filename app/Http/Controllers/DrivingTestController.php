@@ -29,43 +29,52 @@ class DrivingTestController extends Controller
         $candidateFilter = $request->query('candidate_id');
         $dateFromFilter = $request->query('date_from');
         $dateToFilter = $request->query('date_to');
-        $evaluatorFilter = $request->query('evaluator_id'); // Filtre évaluateur optionnel
-        $vehicleFilter = $request->query('vehicle_id'); // Filtre véhicule optionnel
+        $evaluatorFilter = $request->query('evaluator_id');
+        $vehicleFilter = $request->query('vehicle_id');
 
         $query = DrivingTest::with(['candidate', 'evaluator', 'vehicle']); // Eager load
 
         // Filtre Statut
-        $allowedStatuses = ['scheduled', 'completed', 'canceled'];
-        if ($statusFilter && $statusFilter !== 'all' && in_array($statusFilter, $allowedStatuses)) {
-             $query->where('status', $statusFilter);
-         } else { $statusFilter = null; }
+        if ($statusFilter && in_array($statusFilter, [
+            DrivingTest::STATUS_PLANIFIE,
+            DrivingTest::STATUS_REUSSI,
+            DrivingTest::STATUS_ECHOUE,
+            DrivingTest::STATUS_ANNULE
+        ])) {
+            $query->where('status', $statusFilter);
+        }
 
         // Filtre Candidat (Pour Admin/Recruiter)
-         // !! Adapter logique de rôle !!
-         $canFilterByCandidate = Auth::user()->isAdmin(); // || Auth::user()->isRecruiter();
-         if ($canFilterByCandidate && $candidateFilter) {
-             $query->where('candidate_id', $candidateFilter);
-         } else { $candidateFilter = null; }
+        $canFilterByCandidate = Auth::user()->isAdmin(); // || Auth::user()->isRecruiter();
+        if ($canFilterByCandidate && $candidateFilter) {
+            $query->where('candidate_id', $candidateFilter);
+        }
 
-        // Filtre Evaluateur (Pour Admin/Recruiter)
-         if ($canFilterByCandidate && $evaluatorFilter) {
-             $query->where('evaluator_id', $evaluatorFilter);
-         } else { $evaluatorFilter = null; }
+        // Filtre Évaluateur
+        if ($canFilterByCandidate && $evaluatorFilter) {
+            $query->where('evaluator_id', $evaluatorFilter);
+        }
 
-         // Filtre Vehicule (Pour Admin/Recruiter)
-         if ($canFilterByCandidate && $vehicleFilter) {
-             $query->where('vehicle_id', $vehicleFilter);
-         } else { $vehicleFilter = null; }
+        // Filtre Véhicule
+        if ($canFilterByCandidate && $vehicleFilter) {
+            $query->where('vehicle_id', $vehicleFilter);
+        }
 
-          // Filtre Date (sur test_date)
-          if ($dateFromFilter) {
-              try { $query->where('test_date', '>=', Carbon::parse($dateFromFilter)->startOfDay()); }
-              catch (\Exception $e) { $dateFromFilter = null; }
-          }
-           if ($dateToFilter) {
-              try { $query->where('test_date', '<=', Carbon::parse($dateToFilter)->endOfDay()); }
-              catch (\Exception $e) { $dateToFilter = null; }
-           }
+        // Filtre Date (sur test_date)
+        if ($dateFromFilter) {
+            try {
+                $query->where('test_date', '>=', Carbon::parse($dateFromFilter)->startOfDay());
+            } catch (\Exception $e) {
+                $dateFromFilter = null;
+            }
+        }
+        if ($dateToFilter) {
+            try {
+                $query->where('test_date', '<=', Carbon::parse($dateToFilter)->endOfDay());
+            } catch (\Exception $e) {
+                $dateToFilter = null;
+            }
+        }
 
         // Trier et Paginer
         $drivingTests = $query->orderBy('test_date', 'desc')->paginate(15);
@@ -74,14 +83,12 @@ class DrivingTestController extends Controller
         $drivingTests->appends($request->only(['status', 'candidate_id', 'date_from', 'date_to', 'evaluator_id', 'vehicle_id']));
 
         // Données pour les filtres de la vue
-        $statuses = $allowedStatuses;
         $candidates = $canFilterByCandidate ? Candidate::orderBy('last_name')->get(['id', 'first_name', 'last_name']) : collect();
-        $evaluators = $canFilterByCandidate ? User::orderBy('name')->get(['id', 'name']) : collect(); // Ou filtrer par rôle évaluateur?
+        $evaluators = $canFilterByCandidate ? User::orderBy('name')->get(['id', 'name']) : collect();
         $vehicles = $canFilterByCandidate ? Vehicle::orderBy('plate_number')->get(['id', 'plate_number', 'brand', 'model']) : collect();
 
-
         return view('driving-tests.index', compact(
-            'drivingTests', 'statuses', 'candidates', 'evaluators', 'vehicles',
+            'drivingTests', 'candidates', 'evaluators', 'vehicles',
             'statusFilter', 'candidateFilter', 'dateFromFilter', 'dateToFilter', 'evaluatorFilter', 'vehicleFilter'
         ));
     }
@@ -106,26 +113,36 @@ class DrivingTestController extends Controller
      */
     public function store(Request $request)
     {
-        // !! Vérifier autorisation !!
-        // $this->authorize('create', DrivingTest::class);
-
-        $validatedData = $request->validate([
+        $request->validate([
             'candidate_id' => 'required|exists:candidates,id',
             'evaluator_id' => 'required|exists:users,id',
-            'vehicle_id' => 'nullable|exists:vehicles,id',
+            'vehicle_id' => 'required|exists:vehicles,id',
             'test_date' => 'required|date|after_or_equal:today',
-            'route_details' => 'nullable|string|max:1000',
-        ],[/* ... messages custom ... */]);
+            'status' => 'required|in:' . implode(',', [
+                DrivingTest::STATUS_PLANIFIE,
+                DrivingTest::STATUS_REUSSI,
+                DrivingTest::STATUS_ECHOUE,
+                DrivingTest::STATUS_ANNULE
+            ]),
+        ], [
+            'candidate_id.required' => 'Le candidat est obligatoire.',
+            'evaluator_id.required' => 'L\'évaluateur est obligatoire.',
+            'vehicle_id.required' => 'Le véhicule est obligatoire.',
+            'test_date.required' => 'La date du test est obligatoire.',
+            'test_date.after_or_equal' => 'La date du test doit être aujourd\'hui ou dans le futur.',
+            'status.required' => 'Le statut est obligatoire.',
+            'status.in' => 'Le statut sélectionné n\'est pas valide.',
+        ]);
 
-        $validatedData['status'] = 'scheduled'; // Statut initial
-
-        try {
-            DrivingTest::create($validatedData);
-            return Redirect::route('driving-tests.index')->with('success', 'Test de conduite planifié.');
-        } catch (\Exception $e) {
-            Log::error("Erreur création test conduite: " . $e->getMessage());
-            return Redirect::back()->withInput()->with('error', 'Erreur planification test.');
+        $data = $request->all();
+        if (!isset($data['status'])) {
+            $data['status'] = DrivingTest::STATUS_PLANIFIE;
         }
+
+        $drivingTest = DrivingTest::create($data);
+
+        return redirect()->route('driving-tests.index')
+            ->with('success', 'Test de conduite créé avec succès.');
     }
 
     /**
@@ -152,7 +169,7 @@ class DrivingTestController extends Controller
          $candidates = Candidate::orderBy('last_name')->get(['id', 'first_name', 'last_name']);
          $evaluators = User::orderBy('name')->get(['id', 'name']);
          $vehicles = Vehicle::orderBy('plate_number')->get(['id', 'plate_number', 'brand', 'model']);
-         $statuses = [DrivingTest::STATUS_SCHEDULED, DrivingTest::STATUS_PASSED, DrivingTest::STATUS_FAILED, DrivingTest::STATUS_CANCELED]; // Pour le select statut
+         $statuses = ['planifie', 'reussi', 'echoue', 'annule']; // Pour le select statut
 
         return view('driving-tests.edit', compact('drivingTest', 'candidates', 'evaluators', 'vehicles', 'statuses'));
     }
@@ -162,30 +179,42 @@ class DrivingTestController extends Controller
      */
     public function update(Request $request, DrivingTest $drivingTest)
     {
-         // !! Vérifier autorisation !!
-         // $this->authorize('update', $drivingTest);
-
-         $validatedData = $request->validate([
+        $request->validate([
             'candidate_id' => 'required|exists:candidates,id',
             'evaluator_id' => 'required|exists:users,id',
-            'vehicle_id' => 'nullable|exists:vehicles,id',
+            'vehicle_id' => 'required|exists:vehicles,id',
             'test_date' => 'required|date',
-            'route_details' => 'nullable|string|max:1000',
-            'status' => ['required', Rule::in([DrivingTest::STATUS_SCHEDULED, DrivingTest::STATUS_PASSED, DrivingTest::STATUS_FAILED, DrivingTest::STATUS_CANCELED])],
-            'passed' => 'nullable|boolean', // 0 ou 1 du formulaire
-            'results_summary' => 'nullable|string|max:2000',
+            'status' => 'required|in:' . implode(',', [
+                DrivingTest::STATUS_PLANIFIE,
+                DrivingTest::STATUS_REUSSI,
+                DrivingTest::STATUS_ECHOUE,
+                DrivingTest::STATUS_ANNULE
+            ]),
+            'score' => 'nullable|integer|min:0|max:100',
+        ], [
+            'candidate_id.required' => 'Le candidat est obligatoire.',
+            'evaluator_id.required' => 'L\'évaluateur est obligatoire.',
+            'vehicle_id.required' => 'Le véhicule est obligatoire.',
+            'test_date.required' => 'La date du test est obligatoire.',
+            'status.required' => 'Le statut est obligatoire.',
+            'status.in' => 'Le statut sélectionné n\'est pas valide.',
+            'score.integer' => 'Le score doit être un nombre entier.',
+            'score.min' => 'Le score doit être compris entre 0 et 100.',
+            'score.max' => 'Le score doit être compris entre 0 et 100.',
         ]);
 
-        if ($validatedData['status'] !== DrivingTest::STATUS_PASSED && $validatedData['status'] !== DrivingTest::STATUS_FAILED) {
-            $validatedData['passed'] = null;
+        $data = $request->all();
+        
+        // Réinitialiser le score et passed si le statut n'est pas reussi ou echoue
+        if (!in_array($data['status'], [DrivingTest::STATUS_REUSSI, DrivingTest::STATUS_ECHOUE])) {
+            $data['score'] = null;
+            $data['passed'] = null;
         }
-         try {
-            $drivingTest->update($validatedData);
-            return Redirect::route('driving-tests.show', $drivingTest->id)->with('success', 'Test mis à jour.');
-        } catch (\Exception $e) {
-            Log::error("Erreur MAJ test conduite ID {$drivingTest->id}: " . $e->getMessage());
-            return Redirect::back()->withInput()->with('error', 'Erreur mise à jour test.');
-        }
+
+        $drivingTest->update($data);
+
+        return redirect()->route('driving-tests.index')
+            ->with('success', 'Test de conduite mis à jour avec succès.');
     }
 
     /**

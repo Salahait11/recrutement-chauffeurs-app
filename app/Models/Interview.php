@@ -12,6 +12,13 @@ class Interview extends Model
 {
     use HasFactory;
 
+    // Constantes de statut
+    const STATUS_PLANIFIE = 'planifié';
+    const STATUS_EN_COURS = 'en cours';
+    const STATUS_TERMINE = 'terminé';
+    const STATUS_ANNULE = 'annulé';
+    const STATUS_EVALUE = 'évalué';
+
     protected $fillable = [
         'candidate_id',
         'scheduler_id',
@@ -22,14 +29,21 @@ class Interview extends Model
         'status',
         'result',
         'feedback',
+        'duration',
+    ];
+
+    protected $casts = [
+        'interview_date' => 'datetime',
     ];
 
     public static function getStatuses()
     {
         return [
-            'planifié',
-            'terminé',
-            'annulé',
+            self::STATUS_PLANIFIE,
+            self::STATUS_EN_COURS,
+            self::STATUS_TERMINE,
+            self::STATUS_ANNULE,
+            self::STATUS_EVALUE,
         ];
     }
 
@@ -55,6 +69,9 @@ class Interview extends Model
         return $this->belongsTo(User::class, 'interviewer_id');
     }
 
-
+    public function evaluation()
+    {
+        return $this->hasOne(Evaluation::class);
+    }
 
 }

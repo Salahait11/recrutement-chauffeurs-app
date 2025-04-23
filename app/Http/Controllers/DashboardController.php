@@ -3,125 +3,138 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Candidate;
+use App\Models\Employee;
+use App\Models\LeaveRequest;
+use App\Models\Event;
 use App\Models\Interview;
 use App\Models\DrivingTest;
-use App\Models\LeaveRequest;
-use App\Models\User; // Pour vérifier le rôle
-use App\Models\Employee;
-use App\Models\Offer;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    private const UPCOMING_DAYS = 7;
-    private const LICENSE_EXPIRY_THRESHOLD = 60;
-
-    /**
-     * Affiche le tableau de bord principal.
-     */
     public function index()
     {
         $user = Auth::user();
         $viewData = [];
-        $viewData['userName'] = $user->name;
 
-        // Si Admin / RH / Manager...
-        if ($user->isAdmin()) {
-            // Statistiques des candidats
-            $viewData['candidateStats'] = [
-                'nouveau' => Candidate::where('status', Candidate::STATUS_NOUVEAU)->count(),
-                'en_cours' => Candidate::whereIn('status', [
-                    Candidate::STATUS_CONTACTE,
-                    Candidate::STATUS_ENTRETIEN,
-                    Candidate::STATUS_TEST,
-                    Candidate::STATUS_OFFRE
-                ])->count(),
-                'embauche' => Candidate::where('status', Candidate::STATUS_EMBAUCHE)->count(),
-                'refuse' => Candidate::where('status', Candidate::STATUS_REFUSE)->count()
-            ];
-
-            // Statistiques des congés
-            $viewData['leaveStats'] = [
-                'en_attente' => LeaveRequest::where('status', 'pending')->count(),
-                'aujourdhui' => LeaveRequest::whereDate('start_date', '<=', now())
-                    ->whereDate('end_date', '>=', now())
-                    ->where('status', 'approved')
-                    ->count(),
-                'cette_semaine' => LeaveRequest::whereBetween('start_date', [now()->startOfWeek(), now()->endOfWeek()])
-                    ->where('status', 'approved')
-                    ->count()
-            ];
-
-            // Entretiens à venir (7 prochains jours)
-            $viewData['upcomingInterviews'] = Interview::with('candidate')
-                ->whereBetween('interview_date', [now(), now()->addDays(self::UPCOMING_DAYS)])
-                ->orderBy('interview_date')
-                ->limit(5)
-                ->get();
-
-            // Tests de conduite à venir (7 prochains jours)
-            $viewData['upcomingDrivingTests'] = DrivingTest::with(['candidate', 'vehicle'])
-                ->whereBetween('test_date', [now(), now()->addDays(self::UPCOMING_DAYS)])
-                ->orderBy('test_date')
-                ->limit(5)
-                ->get();
-
-            // Permis expirant bientôt (60 jours)
-            $expirationThreshold = now()->addDays(60);
-            $viewData['expiringLicensesCandidates'] = Candidate::whereNotIn('status', ['hired', 'rejected'])                
-                ->whereNotNull('driving_license_expiry')                
-                ->whereDate('driving_license_expiry', '>=', now())
-                ->whereDate('driving_license_expiry', '<=', $expirationThreshold)
-                ->orderBy('driving_license_expiry')
-                ->limit(5)
-                ->get();
-
-            // Statistiques des employés
-            $viewData['employeeStats'] = [
-                'total' => Employee::where('status', 'active')->count(),
-                'en_conge_aujourdhui' => Employee::whereHas('leaveRequests', function($query) {
-                    $query->whereDate('start_date', '<=', now())
-                        ->whereDate('end_date', '>=', now())
-                        ->where('status', 'approved');
-                })->count(),
-                'nouveaux_ce_mois' => Employee::whereMonth('created_at', now()->month)
-                    ->whereYear('created_at', now()->year)
-                    ->count()
-            ];
-
-            // Statistiques des offres
-            $viewData['offerStats'] = [
-                'brouillon' => Offer::where('status', 'draft')->count(),
-                'envoyee' => Offer::where('status', 'sent')->count(),
-                'acceptee' => Offer::where('status', 'accepted')->count(),
-                'refusee' => Offer::where('status', 'rejected')->count()
-            ];
-        }
-        // Si Employé standard...
-        elseif ($user->isEmployee()) {
-            $employee = $user->employee;
-            if ($employee) {
-                // Mes demandes de congé en attente
-                $viewData['myPendingLeaveRequests'] = LeaveRequest::where('employee_id', $employee->id)
-                    ->where('status', 'pending')
-                    ->orderBy('created_at', 'desc')
-                    ->limit(5)
-                    ->get();
-
-                // Mes dernières demandes traitées
-                $viewData['myRecentLeaveRequests'] = LeaveRequest::where('employee_id', $employee->id)
-                    ->whereIn('status', ['approved', 'rejected', 'canceled'])
-                    ->orderBy('updated_at', 'desc')
-                    ->limit(5)
-                    ->get();
-
-                // Mon solde de congés
-                $viewData['myLeaveBalance'] = $employee->calculateLeaveBalance();
-            }
+        if ($user->hasRole('admin')) {
+            $viewData = $this->getAdminStats();
+        } elseif ($user->hasRole('manager')) {
+            $viewData = $this->getManagerStats();
+        } else {
+            $viewData = $this->getEmployeeStats();
         }
 
         return view('dashboard', $viewData);
+    }
+
+    private function getAdminStats()
+    {
+        return [
+            'totalCandidates' => Candidate::count(),
+            'newCandidates' => Candidate::where('created_at', '>=', now()->subWeek())->count(),
+            'totalEmployees' => Employee::count(),
+            'pendingLeaveRequests' => LeaveRequest::where('status', 'pending')->count(),
+            'upcomingEvents' => Event::where('start_date', '>=', now())->count(),
+            'recentActivities' => $this->getRecentActivities(),
+            'candidateStats' => [
+                'nouveau' => Candidate::where('status', 'nouveau')->count(),
+                'en_cours' => Candidate::where('status', 'en_cours')->count(),
+                'embauche' => Candidate::where('status', 'embauche')->count(),
+                'refuse' => Candidate::where('status', 'refuse')->count(),
+            ],
+            'leaveStats' => [
+                'en_attente' => LeaveRequest::where('status', 'pending')->count(),
+                'aujourdhui' => LeaveRequest::whereDate('start_date', today())->count(),
+                'cette_semaine' => LeaveRequest::whereBetween('start_date', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+            ],
+            'employeeStats' => [
+                'total' => Employee::count(),
+                'en_conge_aujourdhui' => Employee::whereHas('leaveRequests', function($query) {
+                    $query->whereDate('start_date', '<=', today())
+                          ->whereDate('end_date', '>=', today())
+                          ->where('status', 'approved');
+                })->count(),
+                'nouveaux_ce_mois' => Employee::where('created_at', '>=', now()->startOfMonth())->count(),
+            ],
+            'offerStats' => [
+                'brouillon' => 0, // À implémenter
+                'envoyee' => 0,   // À implémenter
+                'acceptee' => 0,  // À implémenter
+            ],
+            'upcomingInterviews' => Interview::with('candidate')
+                ->where('interview_date', '>=', now())
+                ->orderBy('interview_date')
+                ->take(5)
+                ->get(),
+            'upcomingDrivingTests' => DrivingTest::with(['candidate', 'vehicle'])
+                ->where('test_date', '>=', now())
+                ->orderBy('test_date')
+                ->take(5)
+                ->get(),
+            'expiringLicensesCandidates' => Candidate::where('driving_license_expiry', '>=', now())
+                ->where('driving_license_expiry', '<=', now()->addDays(30))
+                ->orderBy('driving_license_expiry')
+                ->take(5)
+                ->get(),
+        ];
+    }
+
+    private function getManagerStats()
+    {
+        return [
+            'totalCandidates' => Candidate::count(),
+            'newCandidates' => Candidate::where('created_at', '>=', now()->subWeek())->count(),
+            'pendingLeaveRequests' => LeaveRequest::where('status', 'pending')->count(),
+            'upcomingEvents' => Event::where('start_date', '>=', now())->count(),
+            'recentActivities' => $this->getRecentActivities(),
+            'candidateStats' => [
+                'nouveau' => Candidate::where('status', 'nouveau')->count(),
+                'en_cours' => Candidate::where('status', 'en_cours')->count(),
+                'embauche' => Candidate::where('status', 'embauche')->count(),
+                'refuse' => Candidate::where('status', 'refuse')->count(),
+            ],
+            'leaveStats' => [
+                'en_attente' => LeaveRequest::where('status', 'pending')->count(),
+                'aujourdhui' => LeaveRequest::whereDate('start_date', today())->count(),
+                'cette_semaine' => LeaveRequest::whereBetween('start_date', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+            ],
+            'upcomingInterviews' => Interview::with('candidate')
+                ->where('interview_date', '>=', now())
+                ->orderBy('interview_date')
+                ->take(5)
+                ->get(),
+            'upcomingDrivingTests' => DrivingTest::with(['candidate', 'vehicle'])
+                ->where('test_date', '>=', now())
+                ->orderBy('test_date')
+                ->take(5)
+                ->get(),
+        ];
+    }
+
+    private function getEmployeeStats()
+    {
+        return [
+            'pendingLeaveRequests' => LeaveRequest::where('employee_id', Auth::id())
+                ->where('status', 'pending')
+                ->count(),
+            'upcomingEvents' => Event::where('start_date', '>=', now())->count(),
+            'recentActivities' => $this->getRecentActivities(),
+            'myPendingLeaveRequests' => LeaveRequest::where('employee_id', Auth::id())
+                ->where('status', 'pending')
+                ->get(),
+            'myRecentLeaveRequests' => LeaveRequest::where('employee_id', Auth::id())
+                ->orderBy('created_at', 'desc')
+                ->take(5)
+                ->get(),
+        ];
+    }
+
+    private function getRecentActivities()
+    {
+        // Logique pour récupérer les activités récentes
+        return [];
     }
 }

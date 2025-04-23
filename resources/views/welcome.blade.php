@@ -9,6 +9,9 @@
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+        
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
         <!-- Styles / Scripts -->
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
@@ -21,128 +24,112 @@
             </style>
         @endif
     </head>
-    <body class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
-        <header class="w-full lg:max-w-4xl max-w-[335px] text-sm mb-6 not-has-[nav]:hidden">
+    <body class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-blue-900 text-gray-900 dark:text-gray-100 flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
+        <header class="w-full lg:max-w-4xl max-w-[335px] text-sm mb-6">
             @if (Route::has('login'))
-                <nav class="flex items-center justify-end gap-4">
-                    @auth
-                        <a
-                            href="{{ url('/dashboard') }}"
-                            class="inline-block px-5 py-1.5 dark:text-[#EDEDEC] border-[#19140035] hover:border-[#1915014a] border text-[#1b1b18] dark:border-[#3E3E3A] dark:hover:border-[#62605b] rounded-sm text-sm leading-normal"
-                        >
-                            Tableau de bord
-                        </a>
-                    @else
-                        <a
-                            href="{{ route('login') }}"
-                            class="inline-block px-5 py-1.5 dark:text-[#EDEDEC] text-[#1b1b18] border border-transparent hover:border-[#19140035] dark:hover:border-[#3E3E3A] rounded-sm text-sm leading-normal"
-                        >
-                            Connexion
-                        </a>
-
-                        
-                    @endauth
+                <nav class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-truck text-blue-600 dark:text-blue-400 text-2xl"></i>
+                        <span class="font-semibold text-lg text-blue-800 dark:text-blue-300">Recrutement Chauffeurs</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        @auth
+                            <a
+                                href="{{ url('/dashboard') }}"
+                                class="inline-flex items-center px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 shadow-md"
+                            >
+                                <i class="fas fa-tachometer-alt mr-2"></i>
+                                Tableau de bord
+                            </a>
+                        @else
+                            <a
+                                href="{{ route('login') }}"
+                                class="inline-flex items-center px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 shadow-md"
+                            >
+                                <i class="fas fa-sign-in-alt mr-2"></i>
+                                Connexion
+                            </a>
+                        @endauth
+                    </div>
                 </nav>
             @endif
         </header>
         <div class="flex items-center justify-center w-full transition-opacity opacity-100 duration-750 lg:grow starting:opacity-0">
             <main class="flex max-w-[335px] w-full flex-col-reverse lg:max-w-4xl lg:flex-row">
-                <div class="text-[13px] leading-[20px] flex-1 p-6 pb-12 lg:p-20 bg-white dark:bg-[#161615] dark:text-[#EDEDEC] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d] rounded-bl-lg rounded-br-lg lg:rounded-tl-lg lg:rounded-br-none">
-                    <h1 class="mb-1 font-medium">Recrutement de chauffeurs professionnels</h1>
-                    <p class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">
+                <div class="text-[13px] leading-[20px] flex-1 p-6 pb-12 lg:p-20 bg-white dark:bg-gray-800 shadow-xl rounded-bl-lg rounded-br-lg lg:rounded-tl-lg lg:rounded-br-none">
+                    <h1 class="text-3xl font-bold mb-4 text-blue-700 dark:text-blue-400">Recrutement de chauffeurs professionnels</h1>
+                    <p class="mb-6 text-gray-600 dark:text-gray-300 text-lg">
                         Rejoignez notre équipe de conducteurs expérimentés et bénéficiez d'avantages compétitifs.
                     </p>
                     
-                    <ul class="flex flex-col mb-4 lg:mb-6">
-                        <li class="flex items-center gap-4 py-2 relative before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A] before:top-1/2 before:bottom-0 before:left-[0.4rem] before:absolute">
-                            <span class="relative py-1 bg-white dark:bg-[#161615]">
-                                <span class="flex items-center justify-center rounded-full bg-[#FDFDFC] dark:bg-[#161615] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] w-3.5 h-3.5 border dark:border-[#3E3E3A] border-[#e3e3e0]">
-                                    <span class="rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A] w-1.5 h-1.5"></span>
-                                </span>
-                            </span>
-                            <span>
-                                Salaire compétitif et avantages sociaux
-                            </span>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors duration-200 border border-blue-100 dark:border-blue-800">
+                            <div class="flex-shrink-0 w-10 h-10 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center">
+                                <i class="fas fa-money-bill-wave text-blue-600 dark:text-blue-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-blue-800 dark:text-blue-300">Salaire compétitif</h3>
+                                <p class="text-gray-600 dark:text-gray-300">Avantages sociaux et primes attractives</p>
+                            </div>
                         </li>
-                        <li class="flex items-center gap-4 py-2 relative before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A] before:bottom-1/2 before:top-0 before:left-[0.4rem] before:absolute">
-                            <span class="relative py-1 bg-white dark:bg-[#161615]">
-                                <span class="flex items-center justify-center rounded-full bg-[#FDFDFC] dark:bg-[#161615] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] w-3.5 h-3.5 border dark:border-[#3E3E3A] border-[#e3e3e0]">
-                                    <span class="rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A] w-1.5 h-1.5"></span>
-                                </span>
-                            </span>
-                            <span>
-                                Horaires flexibles et planification optimisée
-                            </span>
+                        <li class="flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors duration-200 border border-blue-100 dark:border-blue-800">
+                            <div class="flex-shrink-0 w-10 h-10 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center">
+                                <i class="fas fa-clock text-blue-600 dark:text-blue-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-blue-800 dark:text-blue-300">Horaires flexibles</h3>
+                                <p class="text-gray-600 dark:text-gray-300">Planification optimisée selon vos besoins</p>
+                            </div>
                         </li>
-                        <li class="flex items-center gap-4 py-2">
-                            <span class="relative py-1 bg-white dark:bg-[#161615]">
-                                <span class="flex items-center justify-center rounded-full bg-[#FDFDFC] dark:bg-[#161615] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] w-3.5 h-3.5 border dark:border-[#3E3E3A] border-[#e3e3e0]">
-                                    <span class="rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A] w-1.5 h-1.5"></span>
-                                </span>
-                            </span>
-                            <span>
-                                Véhicules modernes et bien entretenus
-                            </span>
+                        <li class="flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors duration-200 border border-blue-100 dark:border-blue-800">
+                            <div class="flex-shrink-0 w-10 h-10 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center">
+                                <i class="fas fa-car text-blue-600 dark:text-blue-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-blue-800 dark:text-blue-300">Véhicules modernes</h3>
+                                <p class="text-gray-600 dark:text-gray-300">Flotte récente et bien entretenue</p>
+                            </div>
                         </li>
                     </ul>
                     
-                    <ul class="flex gap-3 text-sm leading-normal">
-                        
-                        <li>
-                            <a href="#contact" class="inline-block px-5 py-1.5 dark:text-[#EDEDEC] border-[#19140035] hover:border-[#1915014a] border text-[#1b1b18] dark:border-[#3E3E3A] dark:hover:border-[#62605b] rounded-sm text-sm leading-normal">
-                                Nous contacter
-                            </a>
-                        </li>
-                    </ul>
+                   
                 </div>
                 
-                <div class="bg-[#f5f5f5] dark:bg-[#1D0002] relative lg:-ml-px -mb-px lg:mb-0 rounded-t-lg lg:rounded-t-none lg:rounded-r-lg aspect-[335/376] lg:aspect-auto w-full lg:w-[438px] shrink-0 overflow-hidden">
-                    <!-- Image ou illustration représentant des chauffeurs -->
-                    <div class="w-full h-full flex items-center justify-center">
-                        <div class="text-center p-8">
-                            <h2 class="text-2xl font-bold mb-4 dark:text-white">Rejoignez notre équipe</h2>
-                            <p class="text-gray-600 dark:text-gray-300 mb-6">
-                                Des opportunités de carrière exceptionnelles pour conducteurs expérimentés
+                <div class="bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 relative lg:-ml-px -mb-px lg:mb-0 rounded-t-lg lg:rounded-t-none lg:rounded-r-lg aspect-[335/376] lg:aspect-auto w-full lg:w-[438px] shrink-0 overflow-hidden shadow-xl">
+                    <div class="absolute inset-0 bg-black opacity-10"></div>
+                    <div class="relative w-full h-full flex items-center justify-center p-8">
+                        <div class="text-center">
+                            <i class="fas fa-truck-moving text-white text-6xl mb-6"></i>
+                            <h2 class="text-3xl font-bold text-white mb-4">Rejoignez notre équipe</h2>
+                            <p class="text-white text-lg mb-8">
+                                Devenez chauffeur professionnel et faites partie d'une équipe dynamique
                             </p>
-                            <div class="flex justify-center">
-                                <div class="w-24 h-24 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                    </svg>
+                            <div class="grid grid-cols-2 gap-4 text-white">
+                                <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm border border-white/20">
+                                    <i class="fas fa-users text-2xl mb-2 text-blue-200"></i>
+                                    <p class="font-semibold">Équipe expérimentée</p>
+                                </div>
+                                <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm border border-white/20">
+                                    <i class="fas fa-chart-line text-2xl mb-2 text-blue-200"></i>
+                                    <p class="font-semibold">Croissance continue</p>
+                                </div>
+                                <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm border border-white/20">
+                                    <i class="fas fa-shield-alt text-2xl mb-2 text-blue-200"></i>
+                                    <p class="font-semibold">Sécurité prioritaire</p>
+                                </div>
+                                <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm border border-white/20">
+                                    <i class="fas fa-handshake text-2xl mb-2 text-blue-200"></i>
+                                    <p class="font-semibold">Support 24/7</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="absolute inset-0 rounded-t-lg lg:rounded-t-none lg:rounded-r-lg shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]"></div>
                 </div>
             </main>
         </div>
-
-        <!-- Section Contact -->
-        <div id="contact" class="w-full lg:max-w-4xl max-w-[335px] mt-12 p-6 bg-white dark:bg-[#161615] rounded-lg shadow-sm">
-            <h2 class="text-lg font-medium mb-4 dark:text-[#EDEDEC]">Contactez-nous</h2>
-            <form class="space-y-4">
-                <div>
-                    <label for="name" class="block text-sm text-[#706f6c] dark:text-[#A1A09A] mb-1">Nom complet</label>
-                    <input type="text" id="name" class="w-full px-3 py-2 border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm bg-transparent">
-                </div>
-                <div>
-                    <label for="email" class="block text-sm text-[#706f6c] dark:text-[#A1A09A] mb-1">Email</label>
-                    <input type="email" id="email" class="w-full px-3 py-2 border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm bg-transparent">
-                </div>
-                <div>
-                    <label for="message" class="block text-sm text-[#706f6c] dark:text-[#A1A09A] mb-1">Message</label>
-                    <textarea id="message" rows="4" class="w-full px-3 py-2 border border-[#e3e3e0] dark:border-[#3E3E3A] rounded-sm bg-transparent"></textarea>
-                </div>
-                <button type="submit" class="px-5 py-1.5 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] rounded-sm hover:bg-black dark:hover:bg-white transition-colors">
-                    Envoyer
-                </button>
-            </form>
-        </div>
-
-        @if (Route::has('login'))
-            <div class="h-14.5 hidden lg:block"></div>
-        @endif
+        
+        <footer class="w-full lg:max-w-4xl max-w-[335px] mt-8 text-center text-sm text-blue-800 dark:text-blue-300">
+            <p>© {{ date('Y') }} Recrutement Chauffeurs. Tous droits réservés.</p>
+        </footer>
     </body>
 </html>

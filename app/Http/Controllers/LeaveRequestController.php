@@ -50,7 +50,12 @@ class LeaveRequestController extends Controller
         }
 
         // Appliquer filtre Statut
-        $allowedStatuses = ['pending', 'approved', 'rejected', 'canceled'];
+        $allowedStatuses = [
+            LeaveRequest::STATUS_EN_ATTENTE,
+            LeaveRequest::STATUS_APPROUVE,
+            LeaveRequest::STATUS_REFUSE,
+            LeaveRequest::STATUS_ANNULE
+        ];
         if ($statusFilter && $statusFilter !== 'all' && in_array($statusFilter, $allowedStatuses)) {
             $query->where('status', $statusFilter);
         } else {
@@ -81,7 +86,7 @@ class LeaveRequestController extends Controller
 
         // Récupérer données pour les selects des filtres
         $employees = $isAdminOrManager ? Employee::with('user')->where('status', 'active')->get()->sortBy('user.name') : collect();
-        $statuses = $allowedStatuses;
+        $statuses = LeaveRequest::$statuses;
 
         // Passer toutes les valeurs de filtre à la vue
         return view('leave_requests.index', compact(
@@ -147,21 +152,19 @@ class LeaveRequestController extends Controller
              } catch (\Exception $e) { Log::error("Erreur stockage justificatif congé: ".$e->getMessage()); return Redirect::back()->withInput()->with('error', 'Erreur stockage justificatif.'); }
          }
 
-         $validatedData['status'] = 'pending';
+         $validatedData['status'] = LeaveRequest::STATUS_EN_ATTENTE;
 
          // Pas de vérification de solde ici
 
          try {
-            LeaveRequest::create($validatedData);
+            $leaveRequest = LeaveRequest::create($validatedData);
+            return Redirect::route('leave-requests.show', $leaveRequest->id)
+                ->with('success', 'Votre demande de congé a été soumise avec succès.');
          } catch (\Exception $e) {
              if ($filePath) Storage::disk('public')->delete($filePath);
              Log::error("Erreur création demande congé: " . $e->getMessage());
              return Redirect::back()->withInput()->with('error', 'Erreur soumission demande.');
         }
-
-        // Pas de notification ici (retirée)
-
-        return Redirect::route('leave-requests.index')->with('success', 'Demande de congé soumise.');
     }
 
     /**
@@ -197,41 +200,58 @@ class LeaveRequestController extends Controller
     {
         // $this->authorize('approveReject', $leaveRequest); // TODO
 
-        if ($request->has('action') && $leaveRequest->status === 'pending') {
+        if ($request->has('action') && $leaveRequest->status === LeaveRequest::STATUS_EN_ATTENTE) {
             $action = $request->input('action');
 
             if ($action === 'approve') {
-                DB::beginTransaction(); try {
-                    // Pas de déduction de solde ici
+                DB::beginTransaction();
+                try {
                     $leaveRequest->update([
-                        'status' => 'approved', 'approver_id' => Auth::id(),
-                        'approved_at' => now(), 'approver_comment' => $request->input('approver_comment')
+                        'status' => LeaveRequest::STATUS_APPROUVE,
+                        'approver_id' => Auth::id(),
+                        'approved_at' => now(),
+                        'approver_comment' => $request->input('approver_comment')
                     ]);
-                    DB::commit(); return Redirect::route('leave-requests.show', $leaveRequest->id)->with('success', 'Demande approuvée.');
-                } catch (\Exception $e) { DB::rollBack(); Log::error(...); return Redirect::route('leave-requests.show', $leaveRequest->id)->with('error', 'Erreur approbation.'); }
 
-            } elseif ($action === 'reject' && $leaveRequest->status === 'pending') {
-     $request->validate(
-        ['approver_comment' => 'required|string|max:500'],
-        ['approver_comment.required' => 'Un commentaire est requis pour rejeter la demande.']
-     );
-     DB::beginTransaction();
-     try {
-         // Utilise update() pour la mise à jour
-         $leaveRequest->update([
-            'status' => 'rejected',
-            'approver_id' => Auth::id(),
-            'approved_at' => now(), // Date du rejet
-            'approver_comment' => $request->input('approver_comment') // Prend la valeur validée
-        ]);
-        DB::commit();
-        return Redirect::route('leave-requests.show', $leaveRequest->id)->with('success', 'Demande rejetée.');
-     } catch (\Exception $e) {
-         DB::rollBack();
-         Log::error("Erreur rejet congé ID {$leaveRequest->id}: " . $e->getMessage());
-         return Redirect::route('leave-requests.show', $leaveRequest->id)->with('error', 'Erreur technique lors du rejet.');
-     }
-}
+                    // Mettre à jour le statut de l'employé en "en congé"
+                    $leaveRequest->employee->update([
+                        'status' => 'on_leave'
+                    ]);
+
+                    DB::commit();
+                    return Redirect::route('leave-requests.show', $leaveRequest->id)
+                        ->with('success', 'Demande approuvée.');
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    Log::error("Erreur approbation congé ID {$leaveRequest->id}: " . $e->getMessage());
+                    return Redirect::route('leave-requests.show', $leaveRequest->id)
+                        ->with('error', 'Erreur lors de l\'approbation.');
+                }
+            } elseif ($action === 'reject') {
+                $request->validate([
+                    'approver_comment' => 'required|string|max:500'
+                ], [
+                    'approver_comment.required' => 'Un commentaire est requis pour rejeter la demande.'
+                ]);
+
+                DB::beginTransaction();
+                try {
+                    $leaveRequest->update([
+                        'status' => LeaveRequest::STATUS_REFUSE,
+                        'approver_id' => Auth::id(),
+                        'approved_at' => now(),
+                        'approver_comment' => $request->input('approver_comment')
+                    ]);
+                    DB::commit();
+                    return Redirect::route('leave-requests.show', $leaveRequest->id)
+                        ->with('success', 'Demande rejetée.');
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    Log::error("Erreur rejet congé ID {$leaveRequest->id}: " . $e->getMessage());
+                    return Redirect::route('leave-requests.show', $leaveRequest->id)
+                        ->with('error', 'Erreur lors du rejet.');
+                }
+            }
         }
 
         return Redirect::route('leave-requests.show', $leaveRequest->id)->with('error', 'Action non valide ou demande déjà traitée.');
@@ -245,9 +265,9 @@ class LeaveRequestController extends Controller
     {
          // $this->authorize('cancel', $leaveRequest); // TODO
 
-         if ($leaveRequest->status === 'pending') {
+         if ($leaveRequest->status === LeaveRequest::STATUS_EN_ATTENTE) {
              DB::beginTransaction(); try {
-                 $leaveRequest->status = 'canceled';
+                 $leaveRequest->status = LeaveRequest::STATUS_ANNULE;
                  $leaveRequest->save(); // Utiliser save() ici car on ne change qu'un champ
                  // Pas de logique de solde à restituer
                  DB::commit();
@@ -278,7 +298,7 @@ class LeaveRequestController extends Controller
 
             // --- Récupérer les Demandes de Congé Approuvées ---
             $queryLeave = LeaveRequest::with(['employee.user', 'leaveType']) // Eager load relations
-                                     ->where('status', 'approved')
+                                     ->where('status', LeaveRequest::STATUS_APPROUVE)
                                      ->where(function($q) use ($start, $end) {
                                          $q->where('start_date', '<=', $end)
                                            ->where('end_date', '>=', $start);

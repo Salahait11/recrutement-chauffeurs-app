@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Interview;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 
@@ -15,12 +16,54 @@ class InterviewController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $interviews = Interview::with(['candidate', 'scheduler','interviewer'])
-        ->get();
+        try {
+            $query = Interview::with(['candidate', 'scheduler', 'interviewer']);
 
-        return view('interviews.index', compact('interviews'));
+            // Filtre par candidat
+            if ($request->filled('candidate_id')) {
+                $query->where('candidate_id', $request->input('candidate_id'));
+            }
+
+            // Filtre par type
+            if ($request->filled('type')) {
+                $query->where('type', $request->input('type'));
+            }
+
+            // Filtre par statut
+            if ($request->filled('status')) {
+                $query->where('status', $request->input('status'));
+            }
+
+            // Filtre par interviewer
+            if ($request->filled('interviewer')) {
+                $query->where('interviewer_id', $request->input('interviewer'));
+            }
+
+            // Filtre par date
+            if ($request->filled('date_from')) {
+                $query->where('interview_date', '>=', $request->input('date_from'));
+            }
+            if ($request->filled('date_to')) {
+                $query->where('interview_date', '<=', $request->input('date_to'));
+            }
+
+            $interviews = $query->orderBy('interview_date', 'desc')->paginate(10)->withQueryString();
+            
+            // Log pour le débogage
+            \Log::info('Nombre d\'entretiens trouvés : ' . $interviews->count());
+            
+            $interviewers = User::all();
+            $candidates = \App\Models\Candidate::all();
+            $types = ['initial', 'technique', 'final'];
+            $statuses = ['planifié', 'en cours', 'terminé', 'annulé'];
+
+            return view('interviews.index', compact('interviews', 'interviewers', 'candidates', 'types', 'statuses'));
+        } catch (\Exception $e) {
+            \Log::error('Erreur dans InterviewController@index : ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors du chargement des entretiens.');
+        }
     }
 
     /**
@@ -28,7 +71,12 @@ class InterviewController extends Controller
      */
     public function create()
     {
-        return view('interviews.create');
+        $candidates = \App\Models\Candidate::all();
+        $interviewers = User::all();
+        $types = ['initial', 'technique', 'final'];
+        $statuses = ['planifié', 'en cours', 'terminé', 'annulé'];
+
+        return view('interviews.create', compact('candidates', 'interviewers', 'types', 'statuses'));
     }
 
     /**
@@ -38,20 +86,20 @@ class InterviewController extends Controller
     {   
         $validatedData = $request->validate([
             'candidate_id' => 'required|exists:candidates,id',
-            'interview_date' => 'required|date|after:today',
+            'interview_date' => 'required|date',
             'type' => 'required|in:initial,technique,final',
             'notes' => 'nullable|string',
-            'interviewer_id' => 'nullable|exists:users,id',
-
+            'interviewer_id' => 'required|exists:users,id',
+            'duration' => 'required|integer|min:15|max:240',
         ]);
+
         $interview = new Interview($validatedData);
         $interview->scheduler_id = auth()->id();
-        $interview->status = 'planifié';
+        $interview->status = 'planifié'; // Statut par défaut
         $interview->save();
 
         return redirect()->route('interviews.index')
             ->with('success', 'Entretien planifié avec succès.');
-
     }
 
     public function show(Interview $interview)
@@ -60,18 +108,20 @@ class InterviewController extends Controller
     }
 
     public function edit(Interview $interview) {
-        return view('interviews.edit', compact('interview'));
+        $candidates = \App\Models\Candidate::all();
+        $interviewers = \App\Models\User::all();
+        return view('interviews.edit', compact('interview', 'candidates', 'interviewers'));
     }
 
     public function update(Request $request, Interview $interview) {
         $validatedData = $request->validate([
             'candidate_id' => 'required|exists:candidates,id',
-            'interview_date' => 'required|date|after:today',
+            'interview_date' => 'required|date',
             'type' => 'required|in:initial,technique,final',
             'notes' => 'nullable|string',
             'interviewer_id' => 'nullable|exists:users,id',
-            'result' => 'nullable|string',
-            'feedback' => 'nullable|string',
+            'duration' => 'required|integer|min:15|max:240',
+            'status' => 'required|in:planifié,en cours,terminé,annulé',
         ]);
         $interview->update($validatedData);
 
@@ -84,5 +134,31 @@ class InterviewController extends Controller
 
         return redirect()->route('interviews.index')
             ->with('success', 'Entretien supprimé avec succès.');
+    }
+
+    public function updateStatus(Request $request, Interview $interview)
+    {
+        $validatedData = $request->validate([
+            'status' => 'required|in:planifié,en cours,terminé,annulé',
+        ]);
+
+        $interview->update($validatedData);
+
+        return redirect()->route('interviews.show', $interview)
+            ->with('success', 'Statut de l\'entretien mis à jour avec succès.');
+    }
+
+    public function cancel(Interview $interview)
+    {
+        if ($interview->status === 'annulé' || $interview->status === 'évalué') {
+            return redirect()->back()->with('error', 'Cet entretien ne peut pas être annulé.');
+        }
+
+        $interview->update([
+            'status' => 'annulé'
+        ]);
+
+        return redirect()->route('interviews.show', $interview)
+            ->with('success', 'L\'entretien a été annulé avec succès.');
     }
 }

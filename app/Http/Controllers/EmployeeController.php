@@ -20,67 +20,77 @@ class EmployeeController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
-{
-    // Récupère tous les paramètres de filtre
-    $search = $request->query('search');
-    $statusFilter = $request->query('status', 'all');
-    $jobTitleFilter = $request->query('job_title');
-    
-    // Requête de base avec la relation 'user' chargée
-    $query = Employee::with(['user' => function($query) {
-        $query->select('id', 'name', 'email'); // Seulement les champs nécessaires
-    }]);
+    {
+        // Récupère tous les paramètres de filtre
+        $search = $request->query('search');
+        $statusFilter = $request->query('status');
+        $jobTitleFilter = $request->query('job_title');
+        
+        // Requête de base avec la relation 'user' chargée
+        $query = Employee::with(['user' => function($query) {
+            $query->select('id', 'name', 'email');
+        }]);
 
-    // Appliquer les filtres
-    if ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('employee_number', 'LIKE', "%{$search}%")
-              ->orWhereHas('user', function ($userQuery) use ($search) {
-                  $userQuery->where('name', 'LIKE', "%{$search}%")
-                            ->orWhere('email', 'LIKE', "%{$search}%");
-              });
-        });
+        // Appliquer les filtres
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('employee_number', 'LIKE', "%{$search}%")
+                  ->orWhereHas('user', function ($userQuery) use ($search) {
+                      $userQuery->where('name', 'LIKE', "%{$search}%")
+                                ->orWhere('email', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filtre par statut
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
+
+        // Filtre par poste
+        if ($jobTitleFilter) {
+            $query->where('job_title', $jobTitleFilter);
+        }
+
+        // Options de tri
+        $sortBy = $request->query('sort_by', 'hire_date');
+        $sortDirection = $request->query('sort_dir', 'desc');
+
+        // Valider les paramètres de tri
+        $validSortColumns = ['hire_date', 'employee_number', 'job_title', 'status'];
+        $sortBy = in_array($sortBy, $validSortColumns) ? $sortBy : 'hire_date';
+        $sortDirection = in_array($sortDirection, ['asc', 'desc']) ? $sortDirection : 'desc';
+
+        // Trier et paginer
+        $employees = $query->orderBy($sortBy, $sortDirection)
+                          ->paginate(20)
+                          ->withQueryString();
+
+        // Définir les statuts possibles avec leurs labels
+        $statuses = [
+            'active' => 'Actif',
+            'on_leave' => 'En Congé',
+            'terminated' => 'Terminé'
+        ];
+
+        // Récupérer les postes uniques
+        $jobTitles = Employee::select('job_title')
+                            ->distinct()
+                            ->whereNotNull('job_title')
+                            ->orderBy('job_title')
+                            ->pluck('job_title');
+
+        return view('employees.index', compact(
+            'employees',
+            'search',
+            'statusFilter',
+            'jobTitleFilter',
+            'statuses',
+            'jobTitles',
+            'sortBy',
+            'sortDirection'
+        ));
     }
-
-    // Filtre par statut
-    if ($statusFilter && $statusFilter !== 'all') {
-        $query->where('status', $statusFilter);
-    }
-
-    // Filtre par poste
-    if ($jobTitleFilter) {
-        $query->where('job_title', $jobTitleFilter);
-    }
-
-    // Options de tri
-    $sortBy = $request->query('sort_by', 'hire_date');
-    $sortDirection = $request->query('sort_dir', 'desc');
-
-    // Valider les paramètres de tri
-    $validSortColumns = ['hire_date', 'employee_number', 'job_title'];
-    $sortBy = in_array($sortBy, $validSortColumns) ? $sortBy : 'hire_date';
-    $sortDirection = in_array($sortDirection, ['asc', 'desc']) ? $sortDirection : 'desc';
-
-    // Trier et paginer
-    $employees = $query->orderBy($sortBy, $sortDirection)
-                      ->paginate(20)
-                      ->appends($request->query());
-
-    // Données supplémentaires pour les filtres
-    $statuses = ['active', 'on_leave', 'terminated']; // Ou récupérer depuis la DB si dynamique
-    $jobTitles = Employee::select('job_title')->distinct()->whereNotNull('job_title')->pluck('job_title');
-
-    return view('employees.index', compact(
-        'employees', 
-        'search',
-        'statusFilter',
-        'jobTitleFilter',
-        'statuses',
-        'jobTitles',
-        'sortBy',
-        'sortDirection'
-    ));
-}
 
     /**
      * Show the form for creating a new resource.
@@ -185,9 +195,16 @@ class EmployeeController extends Controller
         // Exclure l'employé lui-même de la liste
         $managers = User::where('id', '!=', $employee->user_id)
                         ->orderBy('name')
-                        ->get(['id', 'name']);
+                        ->get();
 
-        return view('employees.edit', compact('employee', 'managers'));
+        // Définir les statuts possibles
+        $statuses = [
+            'active' => 'Actif',
+            'on_leave' => 'En Congé',
+            'terminated' => 'Terminé'
+        ];
+
+        return view('employees.edit', compact('employee', 'managers', 'statuses'));
     }
 
     /**

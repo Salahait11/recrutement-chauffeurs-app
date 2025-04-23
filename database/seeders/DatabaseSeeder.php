@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             CandidateSeeder::class,
             LeaveTypeSeeder::class,
             InterviewSeeder::class,
+            EventTypeSeeder::class,
         ]);
     }
 }

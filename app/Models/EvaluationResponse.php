@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EvaluationResponse extends Model {
     use HasFactory;
-    protected $fillable = ['evaluation_id', 'criterion_id', 'rating', 'comment'];
+    protected $fillable = ['evaluation_id', 'criterion_id', 'rating', 'comments'];
 
     public function evaluation(): BelongsTo { return $this->belongsTo(Evaluation::class); }
     public function criterion(): BelongsTo { return $this->belongsTo(EvaluationCriterion::class, 'criterion_id'); }
