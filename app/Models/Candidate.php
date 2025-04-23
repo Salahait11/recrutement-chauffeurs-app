@@ -14,7 +14,7 @@ class Candidate extends Model
     const STATUS_LABELS = [
         'nouveau' => 'Nouveau',
         'contacte' => 'Contacté',
-        'en_entretien' => 'En entretien',
+        'entretien' => 'En entretien',
         'test' => 'Test',
         'offre' => 'Offre',
         'embauche' => 'Embauché',

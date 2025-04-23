@@ -28,7 +28,10 @@ Système de gestion complet pour le recrutement et la gestion des chauffeurs, in
 5. Configurer la base de données dans .env
 6. Générer la clé d'application : `php artisan key:generate`
 7. Exécuter les migrations : `php artisan migrate`
-8. Compiler les assets : `npm run build`
+8. Exécuter les seeders : `php artisan db:seed`
+9. Compiler les assets : `npm run build`
+10. Lancer le serveur Laravel : `php artisan serve`
+11. Lancer le serveur npm : `npm run dev`
 
 ## Fonctionnalités
 
@@ -146,9 +149,24 @@ php artisan key:generate
 php artisan migrate
 ```
 
-8. Lancer le serveur
+8. Exécuter les seeders
+```bash
+php artisan db:seed
+```
+
+9. Compiler les assets
+```bash
+npm run build
+```
+
+10. Lancer le serveur Laravel
 ```bash
 php artisan serve
+```
+
+11. Lancer le serveur npm
+```bash
+npm run dev
 ```
 
 ## Structure du Projet
