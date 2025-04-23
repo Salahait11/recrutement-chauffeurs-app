@@ -17,19 +17,39 @@ class UserController extends Controller
     // Le middleware est appliqué par le groupe de routes dans web.php
 
     /** Display a listing of users. */
-   public function index()
-{
-    // Récupère tous les utilisateurs sauf les admins
-    $users = User::where('role', '=', 'admin')
-                 ->orderBy('name')
-                 ->paginate(20);
+    public function index(Request $request)
+    {
+        $query = User::query();
 
-    // Tu peux garder ça si tu veux créer un utilisateur avec rôle admin forcé
-    $roles = ['admin'];
+        // Filtre de recherche
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
 
-    return view('admin.users.index', compact('users', 'roles'));
-}
+        // Filtre par rôle
+        if ($request->has('role') && $request->input('role') !== '') {
+            $query->where('role', $request->input('role'));
+        }
 
+        // Filtre par statut
+        if ($request->has('is_active') && $request->input('is_active') !== '') {
+            $query->where('is_active', $request->input('is_active'));
+        }
+
+        // Tri par défaut sur le nom
+        $sort = $request->input('sort', 'name');
+        $direction = $request->input('direction', 'asc');
+        $query->orderBy($sort, $direction);
+
+        $users = $query->paginate(15);
+        $roles = ['admin', 'manager', 'employee', 'candidate'];
+
+        return view('admin.users.index', compact('users', 'roles'));
+    }
 
     /** Show the form for creating a new user */
     public function create()

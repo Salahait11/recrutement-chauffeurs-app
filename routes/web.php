@@ -23,6 +23,9 @@ Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
 
+// Route PDF test
+Route::get('/interviews/pdf', [InterviewController::class, 'generatePdf'])->name('interviews.pdf');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']) 
       ->name('dashboard');
@@ -32,6 +35,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Candidats & Documents
+    Route::get('/candidates/pdf', [CandidateController::class, 'generatePdf'])->name('candidates.pdf');
     Route::resource('candidates', CandidateController::class);
     Route::post('/candidates/{candidate}/documents', [DocumentController::class, 'store'])->name('candidates.documents.store');
     Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');

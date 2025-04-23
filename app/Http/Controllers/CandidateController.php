@@ -6,6 +6,7 @@ use App\Models\Candidate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class CandidateController extends Controller
 {
@@ -47,6 +48,50 @@ class CandidateController extends Controller
             'statuses' => $statuses,
             'statusLabels' => Candidate::$statuses
         ]);
+    }
+
+    public function generatePdf(Request $request)
+    {
+        $query = Candidate::query();
+
+        // Appliquer les filtres
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->input('date_from'));
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->input('date_to'));
+        }
+
+        $candidates = $query->latest()->get();
+
+        $filters = [
+            'search' => $request->input('search'),
+            'status' => $request->input('status'),
+            'date_from' => $request->input('date_from'),
+            'date_to' => $request->input('date_to'),
+        ];
+
+        $pdf = PDF::loadView('candidates.pdf', [
+            'candidates' => $candidates,
+            'statusLabels' => Candidate::STATUS_LABELS,
+            'filters' => $filters
+        ]);
+
+        return $pdf->download('liste-candidats.pdf');
     }
 
     public function create()
@@ -98,8 +143,8 @@ class CandidateController extends Controller
         return redirect()->route('candidates.index')->with('success', 'Candidat ajouté avec succès.');
 
     } catch (\Exception $e) {
-        Log::error('Erreur lors de l’ajout du candidat : ' . $e->getMessage());
-        return back()->with('error', 'Erreur lors de l’ajout du candidat.');
+        Log::error("Erreur lors de l'ajout du candidat : " . $e->getMessage());
+        return back()->with('error', "Erreur lors de l'ajout du candidat.");
     }
 }
 

@@ -11,6 +11,16 @@ class Candidate extends Model
 {
     use HasFactory;
 
+    const STATUS_LABELS = [
+        'nouveau' => 'Nouveau',
+        'contacte' => 'Contacté',
+        'en_entretien' => 'En entretien',
+        'test' => 'Test',
+        'offre' => 'Offre',
+        'embauche' => 'Embauché',
+        'refuse' => 'Refusé'
+    ];
+
     protected $fillable = [
         'first_name',
         'last_name',

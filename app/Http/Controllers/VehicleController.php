@@ -14,10 +14,32 @@ class VehicleController extends Controller
      // Pas de constructeur, middleware sur la route
 
     /** Display a listing of the resource. */
-    public function index()
+    public function index(Request $request)
     {
-        $vehicles = Vehicle::orderBy('brand')->orderBy('model')->paginate(15);
-        return view('admin.vehicles.index', compact('vehicles')); // Vue admin/vehicles/index
+        $query = Vehicle::query();
+
+        // Filtre de recherche
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('plate_number', 'like', "%{$search}%")
+                  ->orWhere('brand', 'like', "%{$search}%")
+                  ->orWhere('model', 'like', "%{$search}%");
+            });
+        }
+
+        // Filtre par disponibilité
+        if ($request->has('is_available') && $request->input('is_available') !== '') {
+            $query->where('is_available', $request->input('is_available'));
+        }
+
+        // Tri par défaut sur la marque
+        $sort = $request->input('sort', 'brand');
+        $direction = $request->input('direction', 'asc');
+        $query->orderBy($sort, $direction);
+
+        $vehicles = $query->paginate(15);
+        return view('admin.vehicles.index', compact('vehicles'));
     }
 
     /** Show the form for creating a new resource. */

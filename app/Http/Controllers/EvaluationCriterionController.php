@@ -14,11 +14,35 @@ class EvaluationCriterionController extends Controller
     // Middleware appliqué par la route
 
     /** Display a listing of the resource. */
-    public function index()
+    public function index(Request $request)
     {
-        // Ordonner par catégorie puis par nom
-        $criteria = EvaluationCriterion::orderBy('category')->orderBy('name')->paginate(20);
-        return view('admin.evaluation_criteria.index', compact('criteria')); // Vue admin/evaluation_criteria/index
+        $query = EvaluationCriterion::query();
+
+        // Filtre de recherche
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%");
+            });
+        }
+
+        // Filtre par catégorie
+        if ($request->has('category') && $request->input('category') !== '') {
+            $query->where('category', $request->input('category'));
+        }
+
+        // Tri par défaut sur la catégorie puis le nom
+        $sort = $request->input('sort', 'category');
+        $direction = $request->input('direction', 'asc');
+        $query->orderBy($sort, $direction)
+              ->orderBy('name', 'asc');
+
+        $criteria = $query->paginate(20);
+        $categories = EvaluationCriterion::select('category')->distinct()->whereNotNull('category')->pluck('category');
+        
+        return view('admin.evaluation_criteria.index', compact('criteria', 'categories'));
     }
 
     /** Show the form for creating a new resource. */

@@ -16,9 +16,30 @@ class LeaveTypeController extends Controller
     
 
     /** Display a listing of the resource. */
-    public function index()
+    public function index(Request $request)
     {
-        $leaveTypes = LeaveType::orderBy('name')->paginate(15);
+        $query = LeaveType::query();
+
+        // Filtre de recherche
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // Filtre par statut
+        if ($request->has('is_active') && $request->input('is_active') !== '') {
+            $query->where('is_active', $request->input('is_active'));
+        }
+
+        // Tri par défaut sur le nom
+        $sort = $request->input('sort', 'name');
+        $direction = $request->input('direction', 'asc');
+        $query->orderBy($sort, $direction);
+
+        $leaveTypes = $query->paginate(15);
         return view('admin.leave_types.index', compact('leaveTypes'));
     }
 

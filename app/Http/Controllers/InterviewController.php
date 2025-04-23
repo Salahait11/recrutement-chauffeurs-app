@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Interview;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class InterviewController extends Controller
@@ -161,4 +163,57 @@ class InterviewController extends Controller
         return redirect()->route('interviews.show', $interview)
             ->with('success', 'L\'entretien a été annulé avec succès.');
     }
+
+    public function generatePdf(Request $request)
+    {
+        try {
+            $query = Interview::with(['candidate', 'scheduler', 'interviewer']);
+
+            // Initialiser les filtres
+            $filters = [];
+
+            if ($request->filled('candidate_id')) {
+                $query->where('candidate_id', $request->input('candidate_id'));
+                $filters['candidate_id'] = $request->input('candidate_id');
+            }
+
+            if ($request->filled('type')) {
+                $query->where('type', $request->input('type'));
+                $filters['type'] = $request->input('type');
+            }
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->input('status'));
+                $filters['status'] = $request->input('status');
+            }
+
+            if ($request->filled('interviewer')) {
+                $query->where('interviewer_id', $request->input('interviewer'));
+                $filters['interviewer'] = $request->input('interviewer');
+            }
+
+            if ($request->filled('date_from')) {
+                $query->where('interview_date', '>=', $request->input('date_from'));
+                $filters['date_from'] = $request->input('date_from');
+            }
+
+            if ($request->filled('date_to')) {
+                $query->where('interview_date', '<=', $request->input('date_to'));
+                $filters['date_to'] = $request->input('date_to');
+            }
+
+            $interviews = $query->orderBy('interview_date', 'desc')->get();
+
+            $pdf = Pdf::loadView('interviews.pdf', [
+                'interviews' => $interviews,
+                'filters' => $filters
+            ]);
+
+            return $pdf->download('entretiens.pdf');
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de la génération du PDF des entretiens : ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la génération du PDF.');
+        }
+    }
+
 }
