@@ -164,6 +164,18 @@ class InterviewController extends Controller
             ->with('success', 'L\'entretien a été annulé avec succès.');
     }
 
+    public function start(Interview $interview)
+    {
+        if ($interview->status !== 'planifié') {
+            return redirect()->route('interviews.show', $interview)
+                ->with('error', 'L\'entretien ne peut être démarré que s\'il est planifié.');
+        }
+
+        $interview->update(['status' => 'en cours']);
+        return redirect()->route('interviews.show', $interview)
+            ->with('success', 'L\'entretien a été démarré avec succès.');
+    }
+
     public function generatePdf(Request $request)
     {
         try {
