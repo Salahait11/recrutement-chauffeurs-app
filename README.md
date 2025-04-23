@@ -1,5 +1,79 @@
 # Système de Gestion de Recrutement de Chauffeurs
 
+## Description
+Système de gestion complet pour le recrutement et la gestion des chauffeurs, incluant la gestion des candidatures, des employés, des absences et la génération de rapports.
+
+## Documentation
+
+### Guides Utilisateur
+- [Guide Administrateur](docs/GUIDE_ADMIN.md) - Documentation complète pour les administrateurs
+- [Guide Utilisateur](docs/GUIDE_UTILISATEUR.md) - Documentation pour tous les utilisateurs
+- [Guide Technique](docs/GUIDE_TECHNIQUE.md) - Documentation technique pour les développeurs
+- [Guide de Sécurité](docs/GUIDE_SECURITE.md) - Documentation sur la sécurité et la protection des données
+- [Guide de Maintenance](docs/GUIDE_MAINTENANCE.md) - Documentation sur la maintenance du système
+
+## Installation
+
+### Prérequis
+- PHP 8.1 ou supérieur
+- Composer
+- MySQL 5.7 ou supérieur
+- Node.js et npm
+
+### Étapes d'Installation
+1. Cloner le dépôt
+2. Installer les dépendances PHP : `composer install`
+3. Installer les dépendances JavaScript : `npm install`
+4. Copier le fichier .env : `cp .env.example .env`
+5. Configurer la base de données dans .env
+6. Générer la clé d'application : `php artisan key:generate`
+7. Exécuter les migrations : `php artisan migrate`
+8. Compiler les assets : `npm run build`
+
+## Fonctionnalités
+
+### Gestion des Candidats
+- Création et suivi des candidatures
+- Gestion des documents
+- Évaluation des compétences
+- Planification des entretiens
+
+### Gestion des Employés
+- Profils détaillés
+- Gestion des documents
+- Suivi des performances
+- Gestion des absences
+
+### Rapports et Statistiques
+- Tableaux de bord personnalisés
+- Export de données
+- Génération de PDF
+- Analyses avancées
+
+## Sécurité
+- Authentification sécurisée
+- Gestion des rôles et permissions
+- Protection des données sensibles
+- Conformité RGPD
+
+## Maintenance
+- Procédures de sauvegarde
+- Mises à jour automatiques
+- Monitoring du système
+- Support technique
+
+## Licence
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+## Support
+Pour toute question ou assistance :
+- Consultez la documentation
+- Contactez le support technique
+- Ouvrez un ticket sur le système de support
+
+## Contribution
+Les contributions sont les bienvenues ! Veuillez consulter les [directives de contribution](CONTRIBUTING.md) pour plus d'informations.
+
 ## Table des Matières
 1. [Introduction](#introduction)
 2. [Installation](#installation)
