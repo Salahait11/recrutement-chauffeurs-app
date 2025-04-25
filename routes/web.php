@@ -49,6 +49,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('interviews.update-status');
     Route::post('/interviews/{interview}/cancel', [InterviewController::class, 'cancel'])->name('interviews.cancel');
     Route::post('/interviews/{interview}/start', [InterviewController::class, 'start'])->name('interviews.start');
+    Route::post('/interviews/{interview}/complete', [InterviewController::class, 'complete'])->name('interviews.complete');
 
     // Tests Conduite & Evaluations liées
     Route::resource('driving-tests', DrivingTestController::class);
