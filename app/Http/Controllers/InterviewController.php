@@ -176,6 +176,19 @@ class InterviewController extends Controller
             ->with('success', 'L\'entretien a été démarré avec succès.');
     }
 
+    public function complete(Interview $interview)
+    {
+        if ($interview->status !== 'en cours') {
+            return redirect()->route('interviews.show', $interview)
+                ->with('error', 'L\'entretien ne peut être terminé que s\'il est en cours.');
+        }
+
+        $interview->update(['status' => 'terminé']);
+
+        return redirect()->route('interviews.show', $interview)
+            ->with('success', 'L\'entretien a été terminé avec succès.');
+    }
+
     public function generatePdf(Request $request)
     {
         try {
