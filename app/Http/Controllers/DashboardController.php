@@ -9,6 +9,7 @@ use App\Models\LeaveRequest;
 use App\Models\Event;
 use App\Models\Interview;
 use App\Models\DrivingTest;
+use App\Models\Offer;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -33,17 +34,16 @@ class DashboardController extends Controller
     private function getAdminStats()
     {
         return [
-            'totalCandidates' => Candidate::count(),
+            'totalEmployees' => Employee::where('status', 'active')->count(),
             'newCandidates' => Candidate::where('created_at', '>=', now()->subWeek())->count(),
-            'totalEmployees' => Employee::count(),
             'pendingLeaveRequests' => LeaveRequest::where('status', 'pending')->count(),
             'upcomingEvents' => Event::where('start_date', '>=', now())->count(),
             'recentActivities' => $this->getRecentActivities(),
             'candidateStats' => [
-                'nouveau' => Candidate::where('status', 'nouveau')->count(),
-                'en_cours' => Candidate::where('status', 'en_cours')->count(),
-                'embauche' => Candidate::where('status', 'embauche')->count(),
-                'refuse' => Candidate::where('status', 'refuse')->count(),
+                'nouveau' => Candidate::where('status', Candidate::STATUS_NOUVEAU)->count(),
+                'en_cours' => Candidate::where('status', Candidate::STATUS_ENTRETIEN)->count(),
+                'embauche' => Candidate::where('status', Candidate::STATUS_EMBAUCHE)->count(),
+                'refuse' => Candidate::where('status', Candidate::STATUS_REFUSE)->count(),
             ],
             'leaveStats' => [
                 'en_attente' => LeaveRequest::where('status', 'pending')->count(),
@@ -51,7 +51,7 @@ class DashboardController extends Controller
                 'cette_semaine' => LeaveRequest::whereBetween('start_date', [now()->startOfWeek(), now()->endOfWeek()])->count(),
             ],
             'employeeStats' => [
-                'total' => Employee::count(),
+                'total' => Employee::where('status', 'active')->count(),
                 'en_conge_aujourdhui' => Employee::whereHas('leaveRequests', function($query) {
                     $query->whereDate('start_date', '<=', today())
                           ->whereDate('end_date', '>=', today())
@@ -60,16 +60,18 @@ class DashboardController extends Controller
                 'nouveaux_ce_mois' => Employee::where('created_at', '>=', now()->startOfMonth())->count(),
             ],
             'offerStats' => [
-                'brouillon' => 0, // À implémenter
-                'envoyee' => 0,   // À implémenter
-                'acceptee' => 0,  // À implémenter
+                'brouillon' => Offer::where('status', Offer::STATUS_BROUILLON)->count(),
+                'envoyee' => Offer::where('status', Offer::STATUS_ENVOYEE)->count(),
+                'acceptee' => Offer::where('status', Offer::STATUS_ACCEPTEE)->count(),
             ],
             'upcomingInterviews' => Interview::with('candidate')
+                ->where('status', Interview::STATUS_PLANIFIE)
                 ->where('interview_date', '>=', now())
                 ->orderBy('interview_date')
                 ->take(5)
                 ->get(),
             'upcomingDrivingTests' => DrivingTest::with(['candidate', 'vehicle'])
+                ->where('status', DrivingTest::STATUS_PLANIFIE)
                 ->where('test_date', '>=', now())
                 ->orderBy('test_date')
                 ->take(5)
@@ -91,10 +93,10 @@ class DashboardController extends Controller
             'upcomingEvents' => Event::where('start_date', '>=', now())->count(),
             'recentActivities' => $this->getRecentActivities(),
             'candidateStats' => [
-                'nouveau' => Candidate::where('status', 'nouveau')->count(),
-                'en_cours' => Candidate::where('status', 'en_cours')->count(),
-                'embauche' => Candidate::where('status', 'embauche')->count(),
-                'refuse' => Candidate::where('status', 'refuse')->count(),
+                'nouveau' => Candidate::where('status', Candidate::STATUS_NOUVEAU)->count(),
+                'en_cours' => Candidate::where('status', Candidate::STATUS_ENTRETIEN)->count(),
+                'embauche' => Candidate::where('status', Candidate::STATUS_EMBAUCHE)->count(),
+                'refuse' => Candidate::where('status', Candidate::STATUS_REFUSE)->count(),
             ],
             'leaveStats' => [
                 'en_attente' => LeaveRequest::where('status', 'pending')->count(),
@@ -102,11 +104,13 @@ class DashboardController extends Controller
                 'cette_semaine' => LeaveRequest::whereBetween('start_date', [now()->startOfWeek(), now()->endOfWeek()])->count(),
             ],
             'upcomingInterviews' => Interview::with('candidate')
+                ->where('status', Interview::STATUS_PLANIFIE)
                 ->where('interview_date', '>=', now())
                 ->orderBy('interview_date')
                 ->take(5)
                 ->get(),
             'upcomingDrivingTests' => DrivingTest::with(['candidate', 'vehicle'])
+                ->where('status', DrivingTest::STATUS_PLANIFIE)
                 ->where('test_date', '>=', now())
                 ->orderBy('test_date')
                 ->take(5)
