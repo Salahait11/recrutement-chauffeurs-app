@@ -130,13 +130,14 @@ class OfferController extends Controller
                 throw new \Exception('Le candidat a déjà une offre en cours.');
             }
 
+            // Forcer le statut initial de l'offre à 'envoyee'
+            $validatedData['status'] = Offer::STATUS_ENVOYEE;
+
             // Ajouter l'ID du créateur
             $validatedData['creator_id'] = Auth::id();
 
             // Définir la date d'envoi si le statut est 'envoyee'
-            if ($validatedData['status'] === Offer::STATUS_ENVOYEE) {
-                $validatedData['sent_at'] = now();
-            }
+            $validatedData['sent_at'] = now();
 
             // Créer l'offre
             $offer = Offer::create($validatedData);
@@ -149,9 +150,7 @@ class OfferController extends Controller
             DB::commit();
 
             // Rediriger avec message de succès
-            $message = $offer->status === Offer::STATUS_ENVOYEE ? 
-                'Offre enregistrée et envoyée !' : 
-                'Offre enregistrée comme brouillon.';
+            $message = 'Offre enregistrée et envoyée !';
             
             return redirect()->route('offers.show', $offer)
                 ->with('success', $message);

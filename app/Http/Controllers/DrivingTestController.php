@@ -141,6 +141,9 @@ class DrivingTestController extends Controller
 
         $drivingTest = DrivingTest::create($data);
 
+        // Met à jour le statut du candidat à 'test'
+        $drivingTest->candidate->update(['status' => Candidate::STATUS_TEST]);
+
         return redirect()->route('driving-tests.index')
             ->with('success', 'Test de conduite créé avec succès.');
     }

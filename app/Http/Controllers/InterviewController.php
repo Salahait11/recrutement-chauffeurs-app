@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Interview;
 use App\Models\User;
+use App\Models\Candidate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -57,7 +58,7 @@ class InterviewController extends Controller
             \Log::info('Nombre d\'entretiens trouvés : ' . $interviews->count());
             
             $interviewers = User::all();
-            $candidates = \App\Models\Candidate::all();
+            $candidates = Candidate::all();
             $types = ['initial', 'technique', 'final'];
             $statuses = ['planifié', 'en cours', 'terminé', 'annulé'];
 
@@ -73,7 +74,7 @@ class InterviewController extends Controller
      */
     public function create()
     {
-        $candidates = \App\Models\Candidate::all();
+        $candidates = Candidate::all();
         $interviewers = User::all();
         $types = ['initial', 'technique', 'final'];
         $statuses = ['planifié', 'en cours', 'terminé', 'annulé'];
@@ -99,6 +100,8 @@ class InterviewController extends Controller
         $interview->scheduler_id = auth()->id();
         $interview->status = 'planifié'; // Statut par défaut
         $interview->save();
+        // Met à jour le statut du candidat à 'entretien'
+        $interview->candidate->update(['status' => Candidate::STATUS_ENTRETIEN]);
 
         return redirect()->route('interviews.index')
             ->with('success', 'Entretien planifié avec succès.');
@@ -110,8 +113,8 @@ class InterviewController extends Controller
     }
 
     public function edit(Interview $interview) {
-        $candidates = \App\Models\Candidate::all();
-        $interviewers = \App\Models\User::all();
+        $candidates = Candidate::all();
+        $interviewers = User::all();
         return view('interviews.edit', compact('interview', 'candidates', 'interviewers'));
     }
 
