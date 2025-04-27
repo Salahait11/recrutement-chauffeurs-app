@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\Rules\File;
+
 class DocumentController extends Controller
 {
     /**
@@ -71,6 +72,22 @@ class DocumentController extends Controller
         // 5. Rediriger vers la page du candidat avec un message de succès
         return Redirect::route('candidates.show', $candidate->id)
                        ->with('document_success', 'Document ajouté avec succès !');
+    }
+
+    /**
+     * Met à jour le type du document.
+     */
+    public function update(Request $request, Document $document)
+    {
+        $validated = $request->validate([
+            'document_type' => 'nullable|string|max:50',
+        ]);
+
+        $document->type = $validated['document_type'] ?? null;
+        $document->save();
+
+        return Redirect::route('candidates.show', $document->candidate_id)
+                       ->with('document_success', 'Type du document mis à jour !');
     }
 
     /**
