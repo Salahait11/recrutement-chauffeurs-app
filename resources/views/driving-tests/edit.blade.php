@@ -72,6 +72,9 @@
         <form action="{{ route('driving-tests.update', $drivingTest->id) }}" method="POST" class="p-6 space-y-6">
             @csrf
             @method('PUT')
+            @if(request('mode') === 'result')
+                <input type="hidden" name="mode" value="result">
+            @endif
 
             @unless(request('mode') === 'result')
             <!-- Informations Générales -->
