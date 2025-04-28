@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Date; // Add this line
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
@@ -38,6 +39,7 @@ class RegisteredUserController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'email_verified_at' => now(), // Vérifié directement
             'password' => Hash::make($request->password),
         ]);
 

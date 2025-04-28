@@ -84,18 +84,11 @@
                   {{-- Role --}}
                 <div>
                     <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Rôle <span class="text-red-500">*</span></label>
-                     @php $isSelf = (Auth::id() === $user->id); @endphp
-                     <select name="role" id="role" required {{ $isSelf ? 'disabled' : '' }}
-                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm {{ $isSelf ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-75' : '' }}">
-                        @foreach($roles as $roleOption) {{-- Assumes $roles passed from controller --}}
-                            <option value="{{ $roleOption }}" @selected(old('role', $user->role) == $roleOption)>{{ ucfirst($roleOption) }}</option>
-                        @endforeach
+                    @php $currentRole = old('role', $user->role); @endphp
+                    <select id="role" disabled class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm bg-gray-100 cursor-not-allowed opacity-75 sm:text-sm">
+                        <option value="{{ $currentRole }}">{{ ucfirst($currentRole) }}</option>
                     </select>
-                    @if($isSelf)
-                        {{-- Pass current role again if disabled to ensure it's submitted --}}
-                        <input type="hidden" name="role" value="{{ $user->role }}">
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Vous ne pouvez pas modifier votre propre rôle.</p>
-                    @endif
+                    <input type="hidden" name="role" value="{{ $currentRole }}">
                     @error('role')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                 </div>
             </div>
