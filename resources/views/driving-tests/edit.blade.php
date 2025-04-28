@@ -73,6 +73,7 @@
             @csrf
             @method('PUT')
 
+            @unless(request('mode') === 'result')
             <!-- Informations Générales -->
             <div class="space-y-4">
                 <h3 class="text-lg font-medium text-blue-800 dark:text-blue-300">Informations Générales</h3>
@@ -150,9 +151,10 @@
                     @enderror
                 </div>
             </div>
+            @endunless
+            <hr class="dark:border-gray-700 my-4">
 
-             <hr class="dark:border-gray-700 my-4">
-
+            @if(request('mode') === 'result')
             <!-- Résultats du Test -->
              <div class="space-y-4">
                 <h3 class="text-lg font-medium text-blue-800 dark:text-blue-300">Résultats du Test</h3>
@@ -218,6 +220,7 @@
                     @enderror
                 </div>
              </div>
+            @endif
 
             <!-- Boutons d'action -->
             <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
