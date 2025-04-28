@@ -126,9 +126,13 @@
                                 @foreach($interviews as $interview)
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                {{ $interview->candidate->first_name }} {{ $interview->candidate->last_name }}
-                                            </div>
+                                            @if($interview->candidate)
+                                                <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                    {{ $interview->candidate->first_name }} {{ $interview->candidate->last_name }}
+                                                </div>
+                                            @else
+                                                <div class="text-sm italic text-gray-500 dark:text-gray-400">Candidat introuvable</div>
+                                            @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm text-gray-900 dark:text-gray-100">
