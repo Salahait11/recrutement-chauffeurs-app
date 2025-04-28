@@ -182,6 +182,26 @@ class DrivingTestController extends Controller
      */
     public function update(Request $request, DrivingTest $drivingTest)
     {
+        // Handle result-only mode
+        if ($request->get('mode') === 'result') {
+            $request->validate([
+                'status' => ['required', Rule::in([DrivingTest::STATUS_REUSSI, DrivingTest::STATUS_ECHOUE])],
+                'score' => 'nullable|integer|min:0|max:100',
+                'passed' => ['nullable', 'boolean'],
+                'results_summary' => 'nullable|string',
+            ], [
+                'status.required' => 'Le statut est obligatoire.',
+                'status.in' => 'Le statut doit être Réussi ou Échoué.',
+                'score.integer' => 'Le score doit être un nombre entier.',
+                'score.min' => 'Le score doit être entre 0 et 100.',
+                'score.max' => 'Le score doit être entre 0 et 100.',
+            ]);
+            $data = $request->only(['status', 'score', 'passed', 'results_summary']);
+            $drivingTest->update($data);
+            return redirect()->route('driving-tests.show', $drivingTest->id)
+                ->with('success', 'Résultats du test enregistrés avec succès.');
+        }
+
         $request->validate([
             'candidate_id' => 'required|exists:candidates,id',
             'evaluator_id' => 'required|exists:users,id',
