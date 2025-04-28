@@ -28,6 +28,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Auto-validation du compte au premier login
+        $user = Auth::user();
+        if (is_null($user->email_verified_at)) {
+            $user->email_verified_at = now();
+            $user->save();
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
