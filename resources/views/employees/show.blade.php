@@ -199,11 +199,14 @@
                     Exporter PDF
                 </a>
 
-                {{-- Bouton Terminer Contrat --}}
-                @if($employee->status == 'active' || $employee->status == 'on_leave')
-                <a href="{{ route('employees.edit', ['employee' => $employee->id, 'intent' => 'terminate']) }}" {{-- Paramètre optionnel pour pré-remplir le formulaire --}}
-                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition duration-150 ease-in-out">
-                     <svg class="-ml-0.5 mr-1.5 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                {{-- Bouton Terminer Contrat uniquement si profil incomplet --}}
+                @php
+                    // Profil complet si Matricule, Département, Sécurité Sociale et Coordonnées bancaires renseignés
+                    $empComplete = $employee->employee_number && $employee->department && $employee->social_security_number && $employee->bank_details;
+                @endphp
+                @if(($employee->status == 'active' || $employee->status == 'on_leave') && !$empComplete)
+                <a href="{{ route('employees.edit', ['employee' => $employee->id, 'intent' => 'terminate']) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition duration-150 ease-in-out">
+                    <svg class="-ml-0.5 mr-1.5 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M2 10a.75.75 0 0 1 .75-.75h12.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Z" clip-rule="evenodd" />
                         <path fill-rule="evenodd" d="M12.28 15.22a.75.75 0 0 1 0-1.06l2.25-2.25a.75.75 0 0 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 1 1 1.06-1.06l2.25 2.25Z" clip-rule="evenodd" />
                         <path fill-rule="evenodd" d="M12.28 4.78a.75.75 0 0 1 0 1.06l-2.25 2.25a.75.75 0 0 1-1.06-1.06l3-3a.75.75 0 0 1 1.06 0l3 3a.75.75 0 1 1-1.06 1.06l-2.25-2.25Z" clip-rule="evenodd" />
