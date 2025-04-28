@@ -49,8 +49,8 @@ class UserController extends Controller
     /** Show the form for creating a new user */
     public function create()
     {
-         $roles = ['manager', 'candidate']; // Exclure 'admin' des rôles disponibles
-         // Utilise la vue dans le sous-dossier 'admin/users'
+         // Force uniquement le rôle admin et désactive la sélection
+         $roles = ['admin'];
          return view('admin.users.create', compact('roles'));
     }
 
@@ -60,7 +60,8 @@ class UserController extends Controller
          $validatedData = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'role' => ['required', 'string', Rule::in(['manager', 'candidate'])], // Rôles permis
+            // Création forcée d'un utilisateur admin
+            'role' => ['required', 'string', Rule::in(['admin'])],
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 

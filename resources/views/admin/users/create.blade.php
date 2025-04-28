@@ -65,11 +65,12 @@
                 {{-- Role --}}
                 <div>
                     <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Rôle <span class="text-red-500">*</span></label>
-                    <select name="role" id="role" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
+                    <select id="role" disabled class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm bg-gray-100 cursor-not-allowed opacity-75">
                         @foreach($roles as $roleOption)
                             <option value="{{ $roleOption }}" {{ old('role') == $roleOption ? 'selected' : '' }}>{{ ucfirst($roleOption) }}</option>
                         @endforeach
                     </select>
+                    <input type="hidden" name="role" value="{{ $roles[0] }}">
                     @error('role')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                 </div>
             </div>
