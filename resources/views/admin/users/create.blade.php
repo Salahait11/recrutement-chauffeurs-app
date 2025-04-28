@@ -62,21 +62,15 @@
                         @error('email')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
                 </div>
-                {{-- Role (Disabled for Admin create) --}}
+                {{-- Role --}}
                 <div>
-                    <label for="role_disabled" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Rôle <span class="text-red-500">*</span></label>
-                    <select name="role_disabled" id="role_disabled" disabled
-                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-400 sm:text-sm bg-gray-100 cursor-not-allowed opacity-75">
-                        <option value="admin" selected>Admin</option>
-                        {{-- Keep other roles commented or remove if only admin can be created here --}}
-                        {{-- @foreach($roles as $roleOption)
-                            <option value="{{ $roleOption }}" {{ old('role', 'admin') == $roleOption ? 'selected' : '' }}>{{ ucfirst($roleOption) }}</option>
-                        @endforeach --}}
+                    <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Rôle <span class="text-red-500">*</span></label>
+                    <select name="role" id="role" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
+                        @foreach($roles as $roleOption)
+                            <option value="{{ $roleOption }}" {{ old('role') == $roleOption ? 'selected' : '' }}>{{ ucfirst($roleOption) }}</option>
+                        @endforeach
                     </select>
-                    {{-- Hidden input to submit the actual value --}}
-                    <input type="hidden" name="role" value="admin">
                     @error('role')<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Le rôle est défini sur 'Admin' pour ce formulaire.</p>
                 </div>
             </div>
 
