@@ -83,7 +83,7 @@
                         <div>
                             <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('Salaire') }}</p>
                             <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                {{ number_format($offer->salary, 2) }} € / {{ $offer->salary_period }}
+                                {{ number_format($offer->salary, 2, ',', ' ') }} DH / {{ $offer->salary_period }}
                             </p>
                         </div>
                         <div>

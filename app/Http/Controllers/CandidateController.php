@@ -219,7 +219,7 @@ class CandidateController extends Controller
             $candidate->update($validatedData);
         });
 
-        return redirect()->route('candidates.index')->with('success', 'Candidat mis à jour avec succès.');
+        return redirect()->route('candidates.show')->with('success', 'Candidat mis à jour avec succès.');
 
     } catch (\Exception $e) {
         Log::error('Erreur lors de la mise à jour du candidat : ' . $e->getMessage());
@@ -243,5 +243,15 @@ class CandidateController extends Controller
             Log::error("Erreur suppression candidat: " . $e->getMessage());
             return back()->with('error', 'Erreur lors de la suppression du candidat.');
         }
+    }
+
+    public function generateCandidatePdf(Candidate $candidate)
+    {
+        $pdf = PDF::loadView('candidates.candidate-pdf', [
+            'candidate' => $candidate,
+            'statusLabels' => Candidate::$statuses
+        ]);
+
+        return $pdf->download('candidat-' . $candidate->id . '.pdf');
     }
 }

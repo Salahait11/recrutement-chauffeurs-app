@@ -87,7 +87,7 @@ class Offer extends Model {
     // Méthode pour formater le salaire
     public function getFormattedSalaryAttribute(): string {
         if (!$this->salary) return '-';
-        return number_format($this->salary, 2, ',', ' ') . ' €';
+        return number_format($this->salary, 2, ',', ' ') . ' DH';
     }
 
     // Méthode pour vérifier si l'offre est expirée

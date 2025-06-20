@@ -70,7 +70,7 @@
                                 <input type="number" name="salary" id="salary" value="{{ old('salary', $offer->salary) }}" step="0.01" required
                                     class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 shadow-sm">
                                 <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                    <span class="text-gray-500 dark:text-gray-400 sm:text-sm">€</span>
+                                    <span class="text-gray-500 dark:text-gray-400 sm:text-sm">DH</span>
                                 </div>
                             </div>
                         </div>

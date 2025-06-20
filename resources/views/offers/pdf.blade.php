@@ -69,7 +69,7 @@
         <div class="info-row">
             <span class="label">Salaire :</span>
             <span class="value">
-                {{ $offer->salary ? number_format($offer->salary, 2, ',', ' ') . ' €' : 'Non spécifié' }}
+                {{ $offer->salary ? number_format($offer->salary, 2, ',', ' ') . ' DH' : 'Non spécifié' }}
                 {{ $offer->salary_period ? '(' . $offer->salary_period . ')' : '' }}
             </span>
         </div>

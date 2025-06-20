@@ -56,9 +56,37 @@
 
     <!-- Bloc Calendrier -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl rounded-lg border border-blue-100 dark:border-blue-800">
-        <div class="p-4 md:p-6 text-gray-900 dark:text-gray-100">
-             {{-- Le CSS pour FullCalendar devrait idéalement être dans app.css --}}
-             <div id='calendar' class="fc-container"></div> {{-- Calendrier s'affiche ici --}}
+        <div class="p-4 md:p-6 text-gray-900 dark:text-gray-100 relative">
+            {{-- Indicateur de chargement --}}
+            <div id="calendar-loading" class="absolute inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Chargement des événements...</p>
+                </div>
+            </div>
+            
+            {{-- Le CSS pour FullCalendar devrait idéalement être dans app.css --}}
+            <div id='calendar' class="fc-container"></div>
+        </div>
+    </div>
+
+    {{-- Modal pour afficher les détails de l'absence --}}
+    <div id="absence-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden" x-data="{ show: false }" x-show="show" @keydown.escape.window="show = false">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6" 
+                 @click.away="show = false">
+                <div class="absolute right-0 top-0 pr-4 pt-4">
+                    <button type="button" class="rounded-md bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-500 focus:outline-none" @click="show = false">
+                        <span class="sr-only">Fermer</span>
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div id="absence-modal-content">
+                    {{-- Le contenu sera chargé dynamiquement --}}
+                </div>
+            </div>
         </div>
     </div>
 
@@ -69,21 +97,43 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Utilise le nouvel ID du select
+        const calendarEl = document.getElementById('calendar');
         const employeeFilter = document.getElementById('employee_id_filter');
+        const absenceModal = document.getElementById('absence-modal');
+        const absenceModalContent = document.getElementById('absence-modal-content');
 
-        if (employeeFilter) {
-            employeeFilter.addEventListener('change', function() {
-                const selectedEmployeeId = this.value;
-                const currentUrl = new URL(window.location.href);
-                // Gère le paramètre employee_id dans l'URL
-                if (selectedEmployeeId) {
-                    currentUrl.searchParams.set('employee_id', selectedEmployeeId);
-                } else {
-                    currentUrl.searchParams.delete('employee_id');
+        if (calendarEl) {
+            const calendar = new Calendar(calendarEl, {
+                // ... configuration existante ...
+                eventClick: function(info) {
+                    info.jsEvent.preventDefault();
+                    
+                    if (info.event.extendedProps.type === 'absence') {
+                        // Afficher la modal pour les absences
+                        fetch(`/admin/absences/${info.event.id.replace('absence_', '')}`)
+                            .then(response => response.text())
+                            .then(html => {
+                                absenceModalContent.innerHTML = html;
+                                absenceModal.classList.remove('hidden');
+                            })
+                            .catch(error => {
+                                console.error('Erreur lors du chargement des détails:', error);
+                                alert('Erreur lors du chargement des détails de l\'absence');
+                            });
+                    } else if (info.event.url) {
+                        // Pour les autres types d'événements (congés), rediriger vers l'URL
+                        window.location.href = info.event.url;
+                    }
                 }
-                // Recharge la page avec la nouvelle URL (incluant ou non le paramètre)
-                window.location.href = currentUrl.toString();
+            });
+
+            calendar.render();
+
+            // Gestionnaire pour fermer la modal avec la touche Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !absenceModal.classList.contains('hidden')) {
+                    absenceModal.classList.add('hidden');
+                }
             });
         }
     });

@@ -43,6 +43,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/candidates/{candidate}/documents', [DocumentController::class, 'store'])->name('candidates.documents.store');
     Route::put('/documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
     Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
+    Route::get('/candidates/{candidate}/generate-pdf', [CandidateController::class, 'generateCandidatePdf'])->name('candidates.generate-pdf');
 
     // Entretiens & Evaluations liées
     Route::resource('interviews', InterviewController::class);

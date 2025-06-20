@@ -54,48 +54,54 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 // Ajoute les paramètres à l'URL
                 apiUrl += "?" + params.toString();
+                console.log("Chargement des événements depuis:", apiUrl);
 
                 // Effectue l'appel API avec fetch
                 fetch(apiUrl)
                     .then((response) => {
-                        // Vérifie si la réponse est OK (status 2xx)
                         if (!response.ok) {
-                            // Si erreur, log et rejette la promesse
-                            console.error(
-                                "API Error Status:",
-                                response.status,
-                                response.statusText
-                            );
+                            console.error("Erreur API:", {
+                                status: response.status,
+                                statusText: response.statusText,
+                                url: apiUrl
+                            });
                             return response.text().then((text) => {
-                                // Essayer de lire le corps de l'erreur
-                                console.error("API Error Body:", text);
-                                throw new Error(
-                                    "Erreur réseau ou serveur: " +
-                                        response.statusText
-                                );
+                                console.error("Détails de l'erreur:", text);
+                                throw new Error(`Erreur serveur (${response.status}): ${response.statusText}`);
                             });
                         }
-                        // Si OK, parse le JSON
                         return response.json();
                     })
                     .then((data) => {
-                        // Appelle le callback de succès de FullCalendar avec les données
+                        console.log("Événements reçus:", {
+                            total: data.length,
+                            types: {
+                                leaves: data.filter(e => e.extendedProps?.type === 'leave_request').length,
+                                absences: data.filter(e => e.extendedProps?.type === 'absence').length
+                            }
+                        });
                         successCallback(data);
                     })
                     .catch((error) => {
-                        // Gère les erreurs (réseau, parsing JSON, ou l'erreur jetée ci-dessus)
-                        console.error(
-                            "Erreur lors de la récupération des événements:",
-                            error
-                        );
-                        failureCallback(error); // Informe FullCalendar de l'échec
-                        // Affiche une alerte (peut-être à améliorer avec un message plus discret)
-                        alert("Erreur lors du chargement des événements!");
+                        console.error("Erreur lors du chargement des événements:", error);
+                        // Afficher une notification plus élégante
+                        const notification = document.createElement('div');
+                        notification.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
+                        notification.innerHTML = `
+                            <strong class="font-bold">Erreur!</strong>
+                            <span class="block sm:inline"> ${error.message}</span>
+                        `;
+                        document.body.appendChild(notification);
+                        setTimeout(() => notification.remove(), 5000);
+                        
+                        failureCallback(error);
                     });
             },
             loading: function (isLoading) {
-                // Optionnel : Gérer l'état de chargement (ex: afficher/cacher un spinner)
-                // console.log(isLoading ? 'Chargement...' : 'Terminé.');
+                const loadingEl = document.getElementById('calendar-loading');
+                if (loadingEl) {
+                    loadingEl.style.display = isLoading ? 'block' : 'none';
+                }
             },
             eventClick: function (info) {
                 // Empêche le comportement par défaut du navigateur si l'événement a une URL

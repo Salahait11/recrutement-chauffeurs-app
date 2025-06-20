@@ -76,8 +76,13 @@ class AbsenceController extends Controller
     /** Display the specified resource. */
     public function show(Absence $absence)
     {
-        // Normalement pas très utile, on redirige vers edit ou index
-         return redirect()->route('admin.absences.edit', $absence->id);
+        $absence->load(['employee.user', 'recorder']);
+        
+        if (request()->ajax()) {
+            return view('admin.absences._details', compact('absence'));
+        }
+        
+        return view('admin.absences.show', compact('absence'));
     }
 
     /** Show the form for editing the specified resource. */

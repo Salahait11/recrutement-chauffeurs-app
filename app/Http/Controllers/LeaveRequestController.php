@@ -360,40 +360,47 @@ class LeaveRequestController extends Controller
             })->filter(); // Enlève les éléments null
 
             // --- Formater les Absences ---
-             $absenceEvents = $absences->map(function ($absence) {
-                 // Vérification détaillée des relations
-                 $employeeExists = $absence->employee;
-                 $userExists = $employeeExists && $absence->employee->user;
-                 // Pas de leaveType ici
+            $absenceEvents = $absences->map(function ($absence) {
+                // Vérification détaillée des relations
+                $employeeExists = $absence->employee;
+                $userExists = $employeeExists && $absence->employee->user;
 
-                 if (!$employeeExists || !$userExists) {
-                     $missing = [];
-                     if (!$employeeExists) $missing[] = 'employee';
-                     if (!$userExists) $missing[] = 'employee->user';
-                     Log::warning("getLeaveEvents: Données incomplètes pour Absence ID {$absence->id}. Manquant: " . implode(', ', $missing));
-                     return null; // Sera filtré
-                 }
+                if (!$employeeExists || !$userExists) {
+                    $missing = [];
+                    if (!$employeeExists) $missing[] = 'employee';
+                    if (!$userExists) $missing[] = 'employee->user';
+                    Log::warning("getLeaveEvents: Données incomplètes pour Absence ID {$absence->id}. Manquant: " . implode(', ', $missing));
+                    return null;
+                }
 
-                 // Formatage si tout est ok
-                 $employeeName = $absence->employee->user->name;
-                 $color = $absence->is_justified ? '#fdba74' : '#f87171'; // orange-300 / red-400
-                 $startDate = $absence->absence_date->format('Y-m-d');
-                 $endDate = $absence->absence_date->addDay()->format('Y-m-d');
+                // Formatage si tout est ok
+                $employeeName = $absence->employee->user->name;
+                $color = $absence->is_justified ? '#fdba74' : '#f87171'; // orange-300 / red-400
+                
+                // Créer une copie de la date pour éviter de modifier l'objet original
+                $startDate = Carbon::parse($absence->absence_date)->format('Y-m-d');
+                $endDate = Carbon::parse($absence->absence_date)->addDay()->format('Y-m-d');
 
-                 return [
-                     'id' => 'absence_'.$absence->id,
-                     'title' => $employeeName . ' - Absence (' . ($absence->reason_type ?? 'N/C') .')',
-                     'start' => $startDate,
-                     'end' => $endDate,
-                     'backgroundColor' => $color,
-                     'borderColor' => $color,
-                     'url' => route('admin.absences.edit', $absence->id), // Lien vers modification absence
-                     'extendedProps' => ['type' => 'absence', 'justified' => $absence->is_justified]
-                 ];
-             })->filter(); // Enlève les éléments null
+                return [
+                    'id' => 'absence_'.$absence->id,
+                    'title' => $employeeName . ' - Absence (' . ($absence->reason_type ?? 'N/C') .')',
+                    'start' => $startDate,
+                    'end' => $endDate,
+                    'backgroundColor' => $color,
+                    'borderColor' => $color,
+                    'url' => route('admin.absences.show', $absence->id),
+                    'extendedProps' => [
+                        'type' => 'absence',
+                        'justified' => $absence->is_justified,
+                        'reason' => $absence->reason_type,
+                        'notes' => $absence->notes
+                    ]
+                ];
+            })->filter();
 
             // --- Fusionner et Renvoyer ---
-            $allEvents = $leaveEvents->merge($absenceEvents);
+            // Au lieu de merge(), on utilise une collection simple
+            $allEvents = collect([...$leaveEvents, ...$absenceEvents]);
             Log::debug("getLeaveEvents: Total événements formatés: " . $allEvents->count());
 
             return response()->json($allEvents);
