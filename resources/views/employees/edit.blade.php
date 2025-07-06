@@ -180,6 +180,38 @@
                     </div>
                     @endif
 
+                    {{-- Salaire --}}
+                    <div>
+                        <label for="salary" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Salaire (DH)</label>
+                        <input type="number" name="salary" id="salary" min="0" step="0.01" value="{{ old('salary', $employee->salary) }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
+                        @error('salary') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Statut des Augmentations (Affichage seulement) --}}
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Statut des Augmentations</label>
+                        <div class="mt-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Augmentation 3 mois:</span>
+                                    <p class="text-sm {{ $employee->getFirstIncreaseStatusClass() }} mt-1">
+                                        {{ $employee->getFirstIncreaseStatus() }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Augmentation 3 ans:</span>
+                                    <p class="text-sm {{ $employee->getSecondIncreaseStatusClass() }} mt-1">
+                                        {{ $employee->getSecondIncreaseStatus() }}
+                                    </p>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                <strong>Note:</strong> Les augmentations sont appliquées automatiquement par le système.
+                            </p>
+                        </div>
+                    </div>
+
                  </div>
             </div>
 

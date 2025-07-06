@@ -14,40 +14,30 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Vérifie si un utilisateur avec le rôle 'admin' existe déjà pour éviter conflits
-        $existingAdmin = User::where('role', 'admin')->first();
-
-        if (!$existingAdmin) {
-            // Si aucun admin n'existe, crée l'admin par défaut
-            User::updateOrCreate(
-                [
-                    // Champ unique pour trouver/créer l'utilisateur
-                    'email' => 'admin@example.com' // CHOISIS UN EMAIL ADMIN PAR DEFAUT
-                ],
-                [
-                    // Données à insérer ou mettre à jour
-                    'name' => 'Admin Principal',
-                    'password' => Hash::make('password'), // !! CHOISIS UN MOT DE PASSE SECURISE !!
-                    'email_verified_at' => now(), // Marquer comme vérifié
-                    'role' => 'admin' // Définir le rôle explicitement
-                ]
-            );
-            $this->command->info('Default admin user created/updated.');
-        } else {
-             $this->command->info('Admin user already exists, skipping creation.');
-        }
-
-         // Optionnel: Créer un utilisateur 'employee' de base pour les tests ?
-         /*
-         User::updateOrCreate(
-            ['email' => 'employee@example.com'],
+        // Créer l'utilisateur admin par défaut
+        User::updateOrCreate(
+            ['email' => 'admin@example.com'],
             [
-                'name' => 'Employé Test',
+                'name' => 'Administrateur',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
-                'role' => 'employee'
+                'role' => 'admin'
             ]
-         );
-         */
+        );
+
+        $this->command->info('Utilisateur administrateur créé/mis à jour.');
+
+        // Optionnel: Créer un utilisateur 'employee' de base pour les tests ?
+        /*
+        User::updateOrCreate(
+           ['email' => 'employee@example.com'],
+           [
+               'name' => 'Employé Test',
+               'password' => Hash::make('password'),
+               'email_verified_at' => now(),
+               'role' => 'employee'
+           ]
+        );
+        */
     }
 }

@@ -3,6 +3,13 @@
 
 @section('content')
 <div class="space-y-6">
+    <!-- Messages de succès -->
+    @if(session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+            <span class="block sm:inline">{{ session('success') }}</span>
+        </div>
+    @endif
+
     <!-- Messages d'erreur -->
     @if(session('error'))
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
@@ -83,7 +90,22 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date de naissance</label>
-                        <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $candidate->birth_date->format('d/m/Y') }}</p>
+                        <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $candidate->birth_date ? $candidate->birth_date->format('d/m/Y') : 'Non renseigné' }}</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">CIN (Carte d'Identité Nationale)</label>
+                        <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $candidate->cin ?: 'Non renseigné' }}</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Situation familiale</label>
+                        <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $candidate->getMaritalStatusLabel() ?: 'Non renseigné' }}</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre d'enfants</label>
+                        <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $candidate->children_count ?? 0 }} enfant(s)</p>
                     </div>
 
                     <div>
@@ -98,13 +120,28 @@
                 <h3 class="text-lg font-medium text-blue-800 dark:text-blue-300">Informations professionnelles</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Numéro de candidat</label>
+                        <p class="mt-1 text-sm text-gray-900 dark:text-gray-100 font-mono">{{ $candidate->candidate_number }}</p>
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Numéro de permis</label>
                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $candidate->driving_license_number }}</p>
                     </div>
 
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date d'obtention du permis</label>
+                        <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                            {{ $candidate->driving_license_obtained_date ? $candidate->driving_license_obtained_date->format('d/m/Y') : 'Non renseigné' }}
+                            @if($candidate->driving_license_obtained_date)
+                                <span class="text-xs text-gray-500">({{ $candidate->getLicenseSeniority() }} ans d'ancienneté)</span>
+                            @endif
+                        </p>
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date d'expiration du permis</label>
-                        <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $candidate->driving_license_expiry->format('d/m/Y') }}</p>
+                        <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $candidate->driving_license_expiry ? $candidate->driving_license_expiry->format('d/m/Y') : 'Non renseigné' }}</p>
                     </div>
 
                     <div>
@@ -174,13 +211,8 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <a href="{{ Storage::disk('public')->url($doc->file_path) }}" target="_blank" class="text-blue-600 hover:underline font-medium">{{ $doc->original_name }}</a>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <form method="POST" action="{{ route('documents.update', $doc) }}" class="flex items-center space-x-2">
-                                    @csrf
-                                    @method('PUT')
-                                    <input type="text" name="document_type" value="{{ $doc->type }}" placeholder="Type" class="block w-full bg-gray-50 dark:bg-gray-700 text-sm text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1">
-                                    <button type="submit" class="text-blue-600 hover:text-blue-800">OK</button>
-                                </form>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                {{ $doc->type ?: '-' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ round($doc->size/1024,2) }} KB</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $doc->created_at->format('d/m/Y') }}</td>

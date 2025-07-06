@@ -84,6 +84,40 @@
                     </div>
 
                     <div>
+                        <label for="cin" class="block text-sm font-medium text-gray-700 dark:text-gray-300">CIN (Carte d'Identité Nationale)</label>
+                        <input type="text" name="cin" id="cin" value="{{ old('cin') }}"
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm" placeholder="Ex: AB123456">
+                        @error('cin')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="marital_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Situation familiale</label>
+                        <select name="marital_status" id="marital_status"
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
+                            <option value="">Sélectionner...</option>
+                            @foreach($maritalStatuses as $status => $label)
+                                <option value="{{ $status }}" {{ old('marital_status') == $status ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('marital_status')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="children_count" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre d'enfants</label>
+                        <input type="number" name="children_count" id="children_count" value="{{ old('children_count', 0) }}" min="0" max="20"
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
+                        @error('children_count')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
                         <label for="address" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Adresse</label>
                         <input type="text" name="address" id="address" value="{{ old('address') }}" required
                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
@@ -103,6 +137,15 @@
                         <input type="text" name="driving_license_number" id="driving_license_number" value="{{ old('driving_license_number') }}" required
                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
                         @error('driving_license_number')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="driving_license_obtained_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date d'obtention du permis</label>
+                        <input type="date" name="driving_license_obtained_date" id="driving_license_obtained_date" value="{{ old('driving_license_obtained_date') }}"
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
+                        @error('driving_license_obtained_date')
                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
                     </div>

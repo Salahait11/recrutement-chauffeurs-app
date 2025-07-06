@@ -64,6 +64,12 @@
                         </svg>
                         Modifier
                     </a>
+                    <a href="{{ route('employees.detail-pdf', $employee->id) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
+                        <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        Fiche complète PDF
+                    </a>
                      {{-- Bouton Supprimer (si nécessaire et autorisé) --}}
                     {{-- <form action="{{ route('employees.destroy', $employee->id) }}" method="POST" class="inline" onsubmit="return confirm('Supprimer cet employé et son utilisateur associé ? ATTENTION !');">
                         @csrf
@@ -120,6 +126,27 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date d'Embauche</label>
                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ optional($employee->hire_date)->format('d/m/Y') ?? '-' }}</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Salaire</label>
+                        <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                            {{ $employee->salary ? number_format($employee->salary, 2, ',', ' ') . ' DH' : '-' }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Augmentation 3 mois</label>
+                        <p class="mt-1 text-sm {{ $employee->getFirstIncreaseStatusClass() }}">
+                            {{ $employee->getFirstIncreaseStatus() }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Augmentation 3 ans</label>
+                        <p class="mt-1 text-sm {{ $employee->getSecondIncreaseStatusClass() }}">
+                            {{ $employee->getSecondIncreaseStatus() }}
+                        </p>
                     </div>
 
                     <div>
@@ -187,38 +214,7 @@
         </div>
     </div>
 
-    <!-- Bloc Actions Opérationnelles -->
-    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl rounded-lg border border-blue-100 dark:border-blue-800">
-        <div class="p-6">
-            <h3 class="text-lg font-medium text-blue-800 dark:text-blue-300 mb-4 border-b dark:border-gray-700 pb-2">Actions Supplémentaires</h3>
-            <div class="flex flex-wrap justify-end items-center gap-3">
-                {{-- Bouton Exporter PDF --}}
-                <a href="{{ route('employees.pdf', $employee->id) }}" target="_blank"
-                   class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
-                    <svg class="w-4 h-4 me-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                    Exporter PDF
-                </a>
 
-                {{-- Bouton Terminer Contrat uniquement si profil incomplet --}}
-                @php
-                    // Profil complet si Matricule, Département, Sécurité Sociale et Coordonnées bancaires renseignés
-                    $empComplete = $employee->employee_number && $employee->department && $employee->social_security_number && $employee->bank_details;
-                @endphp
-                @if(($employee->status == 'active' || $employee->status == 'on_leave') && !$empComplete)
-                <a href="{{ route('employees.edit', ['employee' => $employee->id, 'intent' => 'terminate']) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition duration-150 ease-in-out">
-                    <svg class="-ml-0.5 mr-1.5 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M2 10a.75.75 0 0 1 .75-.75h12.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Z" clip-rule="evenodd" />
-                        <path fill-rule="evenodd" d="M12.28 15.22a.75.75 0 0 1 0-1.06l2.25-2.25a.75.75 0 0 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 1 1 1.06-1.06l2.25 2.25Z" clip-rule="evenodd" />
-                        <path fill-rule="evenodd" d="M12.28 4.78a.75.75 0 0 1 0 1.06l-2.25 2.25a.75.75 0 0 1-1.06-1.06l3-3a.75.75 0 0 1 1.06 0l3 3a.75.75 0 1 1-1.06 1.06l-2.25-2.25Z" clip-rule="evenodd" />
-                    </svg>
-                    Terminer Contrat
-                </a>
-                @endif
-            </div>
-        </div>
-    </div>
-
-    {{-- Ajouter ici d'autres blocs futurs (congés, etc.) avec la même structure --}}
 
 </div>
 @endsection

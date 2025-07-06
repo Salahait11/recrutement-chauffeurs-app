@@ -119,6 +119,28 @@
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <a href="{{ route('candidates.index', array_merge(request()->except('sort'), ['sort' => 'candidate_number', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc'])) }}" class="group inline-flex">
+                                    N° Candidat
+                                    <span class="ml-2 flex-none rounded text-gray-400 group-hover:visible group-focus:visible">
+                                        @if(request('sort') == 'candidate_number')
+                                            @if(request('direction') == 'asc')
+                                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z" clip-rule="evenodd" />
+                                                </svg>
+                                            @else
+                                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                                                </svg>
+                                            @endif
+                                        @else
+                                            <svg class="invisible h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                                            </svg>
+                                        @endif
+                                    </span>
+                                </a>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 <a href="{{ route('candidates.index', array_merge(request()->except('sort'), ['sort' => 'name', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc'])) }}" class="group inline-flex">
                                     Nom
                                     <span class="ml-2 flex-none rounded text-gray-400 group-hover:visible group-focus:visible">
@@ -185,6 +207,51 @@
                                 </a>
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <a href="{{ route('candidates.index', array_merge(request()->except('sort'), ['sort' => 'cin', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc'])) }}" class="group inline-flex">
+                                    CIN
+                                    <span class="ml-2 flex-none rounded text-gray-400 group-hover:visible group-focus:visible">
+                                        @if(request('sort') == 'cin')
+                                            @if(request('direction') == 'asc')
+                                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z" clip-rule="evenodd" />
+                                                </svg>
+                                            @else
+                                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                                                </svg>
+                                            @endif
+                                        @else
+                                            <svg class="invisible h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                                            </svg>
+                                        @endif
+                                    </span>
+                                </a>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <a href="{{ route('candidates.index', array_merge(request()->except('sort'), ['sort' => 'marital_status', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc'])) }}" class="group inline-flex">
+                                    Situation familiale
+                                    <span class="ml-2 flex-none rounded text-gray-400 group-hover:visible group-focus:visible">
+                                        @if(request('sort') == 'marital_status')
+                                            @if(request('direction') == 'asc')
+                                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z" clip-rule="evenodd" />
+                                                </svg>
+                                            @else
+                                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                                                </svg>
+                                            @endif
+                                        @else
+                                            <svg class="invisible h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                                            </svg>
+                                        @endif
+                                    </span>
+                                </a>
+                            </th>
+
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 <a href="{{ route('candidates.index', array_merge(request()->except('sort'), ['sort' => 'status', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc'])) }}" class="group inline-flex">
                                     Statut
                                     <span class="ml-2 flex-none rounded text-gray-400 group-hover:visible group-focus:visible">
@@ -237,6 +304,11 @@
                         @forelse($candidates as $candidate)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
                                 <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-mono text-gray-900 dark:text-gray-100">
+                                        {{ $candidate->candidate_number }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-10 w-10">
                                             @if($candidate->photo)
@@ -260,6 +332,13 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900 dark:text-gray-100">{{ $candidate->phone }}</div>
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900 dark:text-gray-100">{{ $candidate->cin ?: 'Non renseigné' }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900 dark:text-gray-100">{{ $candidate->getMaritalStatusLabel() ?: 'Non renseigné' }}</div>
+                                </td>
+
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @if($candidate->status == 'nouveau')
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
@@ -321,7 +400,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 dark:text-gray-400">
+                                <td colspan="8" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 dark:text-gray-400">
                                     Aucun candidat trouvé
                                 </td>
                             </tr>

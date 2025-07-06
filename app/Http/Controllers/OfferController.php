@@ -217,14 +217,19 @@ class OfferController extends Controller
                         'role' => 'employee'
                     ]);
 
-                    // Créer un nouvel employé à partir du candidat
-                    Employee::create([
+                                    // Créer un nouvel employé à partir du candidat
+                    $employee = Employee::create([
                         'user_id' => $user->id,
                         'candidate_id' => $offer->candidate_id,
                         'hire_date' => $offer->start_date,
+                        'salary' => $offer->salary, // Récupérer le salaire de l'offre
+                        'initial_salary' => $offer->salary, // Sauvegarder le salaire initial
                         'job_title' => $offer->position_offered,
                         'status' => 'active'
                     ]);
+                    
+                    // Calculer l'augmentation automatique
+                    $employee->calculateSalaryIncrease();
                 }
 
                 DB::commit();
@@ -355,13 +360,18 @@ class OfferController extends Controller
                 ]);
 
                 // Créer un nouvel employé à partir du candidat
-                Employee::create([
+                $employee = Employee::create([
                     'user_id' => $user->id,
                     'candidate_id' => $offer->candidate_id,
                     'hire_date' => $offer->start_date,
+                    'salary' => $offer->salary, // Récupérer le salaire de l'offre
+                    'initial_salary' => $offer->salary, // Sauvegarder le salaire initial
                     'job_title' => $offer->position_offered,
                     'status' => 'active'
                 ]);
+                
+                // Calculer l'augmentation automatique
+                $employee->calculateSalaryIncrease();
             }
 
             DB::commit();

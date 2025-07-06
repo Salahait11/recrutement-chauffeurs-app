@@ -9,7 +9,7 @@ class EventTypeSeeder extends Seeder
 {
     public function run(): void
     {
-        $types = [
+        $eventTypes = [
             [
                 'name' => 'Formation',
                 'description' => 'Session de formation professionnelle',
@@ -32,8 +32,13 @@ class EventTypeSeeder extends Seeder
             ]
         ];
 
-        foreach ($types as $type) {
-            EventType::create($type);
+        foreach ($eventTypes as $eventType) {
+            EventType::updateOrCreate(
+                ['name' => $eventType['name']],
+                $eventType
+            );
         }
+
+        $this->command->info('Types d\'événements créés/mis à jour.');
     }
 } 

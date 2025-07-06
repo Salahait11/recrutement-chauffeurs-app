@@ -22,13 +22,18 @@ class Candidate extends Model
     ];
 
     protected $fillable = [
+        'candidate_number',
         'first_name',
         'last_name',
         'email',
         'phone',
         'address',
         'birth_date',
+        'cin',
+        'marital_status',
+        'children_count',
         'driving_license_number',
+        'driving_license_obtained_date',
         'driving_license_expiry',
         'years_of_experience',
         'status',
@@ -37,8 +42,10 @@ class Candidate extends Model
 
     protected $casts = [
         'birth_date' => 'date',
+        'driving_license_obtained_date' => 'date',
         'driving_license_expiry' => 'date',
-        'years_of_experience' => 'integer'
+        'years_of_experience' => 'integer',
+        'children_count' => 'integer'
     ];
 
     // Définir les statuts possibles
@@ -59,6 +66,20 @@ class Candidate extends Model
         self::STATUS_OFFRE => 'Offre',
         self::STATUS_EMBAUCHE => 'Embauché',
         self::STATUS_REFUSE => 'Refusé',
+    ];
+
+    // Constantes pour la situation familiale
+    const MARITAL_STATUS_SINGLE = 'single';
+    const MARITAL_STATUS_MARRIED = 'married';
+    const MARITAL_STATUS_DIVORCED = 'divorced';
+    const MARITAL_STATUS_WIDOWED = 'widowed';
+
+    // Liste des situations familiales
+    public static $maritalStatuses = [
+        self::MARITAL_STATUS_SINGLE => 'Célibataire',
+        self::MARITAL_STATUS_MARRIED => 'Marié(e)',
+        self::MARITAL_STATUS_DIVORCED => 'Divorcé(e)',
+        self::MARITAL_STATUS_WIDOWED => 'Veuf/Veuve',
     ];
 
     /**
@@ -127,5 +148,49 @@ class Candidate extends Model
             return false;
         }
         return $this->driving_license_expiry->diffInDays(now()) <= 60;
+    }
+
+    // Générer automatiquement le numéro de candidat
+    public static function generateCandidateNumber(): string
+    {
+        $year = date('Y');
+        $lastCandidate = self::whereYear('created_at', $year)->orderBy('id', 'desc')->first();
+        
+        if ($lastCandidate && $lastCandidate->candidate_number) {
+            // Extraire le numéro séquentiel du dernier candidat
+            $lastNumber = (int) substr($lastCandidate->candidate_number, -4);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+        
+        return sprintf('CAN%s%04d', $year, $nextNumber);
+    }
+
+    // Calculer l'ancienneté du permis en années
+    public function getLicenseSeniority(): ?int
+    {
+        if (!$this->driving_license_obtained_date) {
+            return null;
+        }
+        return $this->driving_license_obtained_date->diffInYears(now());
+    }
+
+    // Obtenir le label de la situation familiale
+    public function getMaritalStatusLabel(): ?string
+    {
+        return self::$maritalStatuses[$this->marital_status] ?? null;
+    }
+
+    // Boot method pour générer automatiquement le numéro de candidat
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($candidate) {
+            if (empty($candidate->candidate_number)) {
+                $candidate->candidate_number = self::generateCandidateNumber();
+            }
+        });
     }
 }

@@ -139,6 +139,14 @@
                     {{-- Statut initial (caché, défini comme 'active') --}}
                     <input type="hidden" name="status" value="active">
 
+                    {{-- Salaire --}}
+                    <div>
+                        <label for="salary" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Salaire (DH) <span class="text-red-500">*</span></label>
+                        <input type="number" name="salary" id="salary" min="0" step="0.01" value="{{ old('salary') }}" required
+                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 sm:text-sm">
+                        @error('salary') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+                    </div>
+
                  </div>
             </div>
 

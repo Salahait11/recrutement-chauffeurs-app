@@ -19,7 +19,13 @@
                         </div>
                     </h2>
                 </div>
-                <div class="mt-4 flex md:ml-4 md:mt-0">
+                <div class="mt-4 flex md:ml-4 md:mt-0 space-x-3">
+                    <a href="{{ route('employees.pdf') }}" target="_blank" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Exporter PDF
+                    </a>
                     <a href="{{ route('employees.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
                         <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
@@ -183,6 +189,12 @@
                                     </span>
                                 </a>
                             </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Salaire
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Augmentations
+                            </th>
                             <th scope="col" class="relative px-6 py-3">
                                 <span class="sr-only">Actions</span>
                             </th>
@@ -255,6 +267,19 @@
                                         {{ $statusLabel }}
                                     </span>
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                    {{ $employee->salary ? number_format($employee->salary, 2, ',', ' ') . ' DH' : '-' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="space-y-1">
+                                        <div class="text-xs {{ $employee->getFirstIncreaseStatusClass() }}">
+                                            <span class="font-medium">3 mois:</span> {{ $employee->getFirstIncreaseStatus() }}
+                                        </div>
+                                        <div class="text-xs {{ $employee->getSecondIncreaseStatusClass() }}">
+                                            <span class="font-medium">3 ans:</span> {{ $employee->getSecondIncreaseStatus() }}
+                                        </div>
+                                    </div>
+                                </td>
                                 {{-- Colonne Actions avec Icônes --}}
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex justify-end space-x-2">
@@ -267,6 +292,11 @@
                                         <a href="{{ route('employees.edit', $employee->id) }}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" title="Modifier">
                                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </a>
+                                        <a href="{{ route('employees.detail-pdf', $employee->id) }}" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300" title="Fiche complète PDF">
+                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                                             </svg>
                                         </a>
                                          {{-- Suppression gérée avec précaution --}}
@@ -284,7 +314,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 dark:text-gray-400">
+                                <td colspan="7" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 dark:text-gray-400">
                                     Aucun employé trouvé
                                     {{-- Lien Réinitialiser omis pour coller au modèle --}}
                                 </td>
@@ -299,14 +329,7 @@
                 {{ $employees->appends(request()->query())->links() }}
             </div>
 
-            <div class="flex justify-between items-center">
-                <a href="{{ route('employees.pdf', request()->query()) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
-                    <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Télécharger PDF
-                </a>
-            </div>
+
         </div>
     </div>
 </div>

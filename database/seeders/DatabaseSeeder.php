@@ -11,16 +11,10 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-    
-
         $this->call([
-             AdminUserSeeder::class, // <<< ASSURE-TOI QUE CET APPEL EST PRESENT
-            EvaluationCriteriaSeeder::class, // Garde les autres seeders utiles
-            VehicleSeeder::class,
-            CandidateSeeder::class,
-            LeaveTypeSeeder::class,
-            InterviewSeeder::class,
-            EventTypeSeeder::class,
+            AdminUserSeeder::class,      // Utilisateur admin
+            LeaveTypeSeeder::class,      // Types de congés
+            EventTypeSeeder::class,      // Types d'événements
         ]);
     }
 }

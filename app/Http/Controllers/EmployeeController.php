@@ -127,6 +127,7 @@ class EmployeeController extends Controller
         'work_location' => 'nullable|string|max:255',
         'social_security_number' => 'nullable|string|max:50|unique:employees,social_security_number',
         'bank_details' => 'nullable|string',
+        'salary' => 'required|numeric|min:0',
         // Statut initial? Généralement 'active'
         'status' => 'required|in:active,on_leave,terminated', // Permettre de choisir ? Ou forcer 'active' ?
         'termination_date' => 'nullable|required_if:status,terminated|date|after_or_equal:hire_date',
@@ -160,9 +161,14 @@ class EmployeeController extends Controller
             'work_location' => $validatedData['work_location'] ?? null,
             'social_security_number' => $validatedData['social_security_number'] ?? null,
             'bank_details' => $validatedData['bank_details'] ?? null,
+            'salary' => $validatedData['salary'] ?? null,
+            'initial_salary' => $validatedData['salary'] ?? null,
             'status' => $validatedData['status'] ?? 'active',
             'termination_date' => ($validatedData['status'] === 'terminated') ? $validatedData['termination_date'] : null,
         ]);
+
+        // 4. Calculer les dates d'augmentation automatique
+        $employee->calculateSalaryIncrease();
 
         DB::commit(); // Tout s'est bien passé
 
@@ -229,6 +235,7 @@ class EmployeeController extends Controller
                  Rule::unique('employees', 'social_security_number')->ignore($employee->id),
              ],
             'bank_details' => 'nullable|string',
+            'salary' => 'nullable|numeric|min:0',
             'status' => 'required|in:active,on_leave,terminated',
             // Valider termination_date seulement si status est 'terminated'
             // et doit être après ou égale à la date d'embauche
@@ -388,5 +395,17 @@ class EmployeeController extends Controller
             \Log::error('Erreur lors de la génération du PDF des employés : ' . $e->getMessage());
             return back()->with('error', 'Une erreur est survenue lors de la génération du PDF.');
         }
+    }
+
+    /**
+     * Generate detailed employee PDF
+     */
+    public function generateDetailPdf(Employee $employee)
+    {
+        // Charger toutes les relations nécessaires
+        $employee->load(['user', 'candidate.documents', 'manager']);
+        
+        $pdf = PDF::loadView('employees.employee-detail-pdf', compact('employee'));
+        return $pdf->download('fiche-employe-' . $employee->id . '.pdf');
     }
 }

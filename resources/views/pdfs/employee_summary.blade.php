@@ -95,6 +95,7 @@
             @if($employee->candidate)
                 <tr><td>Profil Candidat :</td><td>#{{ $employee->candidate_id }} (Origine recrutement)</td></tr>
             @endif
+            <tr><td>Salaire :</td><td>{{ $employee->salary ? number_format($employee->salary, 2, ',', ' ') . ' DH' : '-' }}</td></tr>
         </table>
     </div>
 

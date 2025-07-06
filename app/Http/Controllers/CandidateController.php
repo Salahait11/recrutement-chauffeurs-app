@@ -30,6 +30,23 @@ class CandidateController extends Controller
             $query->where('status', $request->input('status'));
         }
 
+        // Tri
+        $sort = $request->input('sort', 'created_at');
+        $direction = $request->input('direction', 'desc');
+        
+        // Validation des colonnes de tri autorisées
+        $allowedSorts = ['candidate_number', 'first_name', 'last_name', 'email', 'phone', 'status', 'created_at'];
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'created_at';
+        }
+        
+        // Tri spécial pour le nom complet
+        if ($sort === 'name') {
+            $query->orderBy('first_name', $direction)->orderBy('last_name', $direction);
+        } else {
+            $query->orderBy($sort, $direction);
+        }
+
         // Liste des statuts pour le filtre
         $statuses = [
             Candidate::STATUS_NOUVEAU,
@@ -41,7 +58,7 @@ class CandidateController extends Controller
             Candidate::STATUS_REFUSE
         ];
 
-        $candidates = $query->latest()->paginate(10);
+        $candidates = $query->paginate(10);
 
         return view('candidates.index', [
             'candidates' => $candidates,
@@ -96,27 +113,11 @@ class CandidateController extends Controller
 
     public function create()
     {
-        $statuses = [
-            'nouveau',
-            'contacte',
-            'entretien',
-            'test',
-            'offre',
-            'embauche',
-            'refuse'
-        ];
+        $statuses = array_keys(Candidate::$statuses);
+        $statusLabels = Candidate::$statuses;
+        $maritalStatuses = Candidate::$maritalStatuses;
 
-        $statusLabels = [
-            'nouveau' => 'Nouveau',
-            'contacte' => 'Contacté',
-            'entretien' => 'En entretien',
-            'test' => 'En test',
-            'offre' => 'Offre envoyée',
-            'embauche' => 'Embauché',
-            'refuse' => 'Refusé'
-        ];
-
-        return view('candidates.create', compact('statuses', 'statusLabels'));
+        return view('candidates.create', compact('statuses', 'statusLabels', 'maritalStatuses'));
     }
 
    public function store(Request $request)
@@ -128,7 +129,11 @@ class CandidateController extends Controller
         'phone' => 'required|string|max:20',
         'address' => 'required|string|max:255',
         'birth_date' => 'required|date',
+        'cin' => 'nullable|string|max:50|unique:candidates,cin',
+        'marital_status' => 'nullable|string|in:' . implode(',', array_keys(Candidate::$maritalStatuses)),
+        'children_count' => 'nullable|integer|min:0|max:20',
         'driving_license_number' => 'required|string|max:50|unique:candidates,driving_license_number',
+        'driving_license_obtained_date' => 'nullable|date|before_or_equal:today',
         'driving_license_expiry' => 'required|date|after:today',
         'years_of_experience' => 'required|integer|min:0',
         'status' => 'required|string|in:' . implode(',', array_keys(Candidate::$statuses)),
@@ -150,52 +155,20 @@ class CandidateController extends Controller
 
     public function show(Candidate $candidate)
     {
-        $statuses = [
-            'nouveau',
-            'contacte',
-            'entretien',
-            'test',
-            'offre',
-            'embauche',
-            'refuse'
-        ];
+        $statuses = array_keys(Candidate::$statuses);
+        $statusLabels = Candidate::$statuses;
+        $maritalStatuses = Candidate::$maritalStatuses;
 
-        $statusLabels = [
-            'nouveau' => 'Nouveau',
-            'contacte' => 'Contacté',
-            'entretien' => 'En entretien',
-            'test' => 'En test',
-            'offre' => 'Offre envoyée',
-            'embauche' => 'Embauché',
-            'refuse' => 'Refusé'
-        ];
-
-        return view('candidates.show', compact('candidate', 'statuses', 'statusLabels'));
+        return view('candidates.show', compact('candidate', 'statuses', 'statusLabels', 'maritalStatuses'));
     }
 
     public function edit(Candidate $candidate)
     {
-        $statuses = [
-            'nouveau',
-            'contacte',
-            'entretien',
-            'test',
-            'offre',
-            'embauche',
-            'refuse'
-        ];
+        $statuses = array_keys(Candidate::$statuses);
+        $statusLabels = Candidate::$statuses;
+        $maritalStatuses = Candidate::$maritalStatuses;
 
-        $statusLabels = [
-            'nouveau' => 'Nouveau',
-            'contacte' => 'Contacté',
-            'entretien' => 'En entretien',
-            'test' => 'En test',
-            'offre' => 'Offre envoyée',
-            'embauche' => 'Embauché',
-            'refuse' => 'Refusé'
-        ];
-
-        return view('candidates.edit', compact('candidate', 'statuses', 'statusLabels'));
+        return view('candidates.edit', compact('candidate', 'statuses', 'statusLabels', 'maritalStatuses'));
     }
 
    public function update(Request $request, Candidate $candidate)
@@ -207,7 +180,11 @@ class CandidateController extends Controller
         'phone' => 'required|string|max:20',
         'address' => 'required|string|max:255',
         'birth_date' => 'required|date',
+        'cin' => 'nullable|string|max:50|unique:candidates,cin,' . $candidate->id,
+        'marital_status' => 'nullable|string|in:' . implode(',', array_keys(Candidate::$maritalStatuses)),
+        'children_count' => 'nullable|integer|min:0|max:20',
         'driving_license_number' => 'required|string|max:50|unique:candidates,driving_license_number,' . $candidate->id,
+        'driving_license_obtained_date' => 'nullable|date|before_or_equal:today',
         'driving_license_expiry' => 'required|date|after:today',
         'years_of_experience' => 'required|integer|min:0',
         'status' => 'required|string|in:' . implode(',', array_keys(Candidate::$statuses)),
@@ -219,7 +196,7 @@ class CandidateController extends Controller
             $candidate->update($validatedData);
         });
 
-        return redirect()->route('candidates.show')->with('success', 'Candidat mis à jour avec succès.');
+        return redirect()->route('candidates.show', $candidate)->with('success', 'Candidat mis à jour avec succès.');
 
     } catch (\Exception $e) {
         Log::error('Erreur lors de la mise à jour du candidat : ' . $e->getMessage());
