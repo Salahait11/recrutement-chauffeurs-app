@@ -41,6 +41,7 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'email_verified_at' => now(), // Vérifié directement
             'password' => Hash::make($request->password),
+            'role' => 'admin', // Rôle admin par défaut
         ]);
 
         event(new Registered($user));

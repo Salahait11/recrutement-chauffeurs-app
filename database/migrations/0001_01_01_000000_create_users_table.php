@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             // == Ligne ajoutée pour le rôle ==
-            $table->string('role')->default('employee')->comment('Rôle: admin, employee, etc.'); // Ajouté après remember_token ou un autre champ pertinent
+            $table->string('role')->default('admin')->comment('Rôle: admin, employee, etc.'); // Ajouté après remember_token ou un autre champ pertinent
             // =================================
             $table->timestamps(); // Crée created_at et updated_at (TIMESTAMP nullable)
         });
